@@ -419,6 +419,7 @@ const loanScenarios: ScenarioNode[] = [
         },
         explanation:
           "You will clear the loan faster and reduce the time spent in negative equity, but monthly repayments increase.",
+        nextScenarioId: 7,
       },
       {
         id: "keep-term",
@@ -426,6 +427,364 @@ const loanScenarios: ScenarioNode[] = [
         apply: (loan) => loan,
         explanation:
           "Your monthly payments stay affordable, but you may remain in negative equity for longer.",
+        nextScenarioId: 7,
+      },
+    ],
+  },
+
+  // -------------------------
+  // NEW SCENARIOS (Iteration 3)
+  // -------------------------
+
+  // Non-financial 1 (Lifestyle change)
+  {
+    id: 7,
+    title: "Lifestyle Change: More Driving",
+    description:
+      "You move further from work and start driving a lot more. Wear and tear increases and your monthly car costs rise.",
+    choices: [
+      {
+        id: "more-driving-extend-term",
+        label: "Lower repayments by extending the term by 6 months",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            termMonthsRemaining: loan.termMonthsRemaining + 6,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Extending the term can ease monthly pressure, but increases the overall interest paid.",
+        nextScenarioId: 8,
+      },
+      {
+        id: "more-driving-keep-term",
+        label: "Keep the loan the same and adjust your budget elsewhere",
+        apply: (loan) => loan,
+        explanation:
+          "Your loan stays unchanged, but you will need to manage higher running costs through budgeting.",
+        nextScenarioId: 8,
+      },
+    ],
+  },
+
+  // Non-financial 2 (Personal event)
+  {
+    id: 8,
+    title: "Personal Circumstance: Unpaid Leave",
+    description:
+      "A personal situation means you need to take unpaid leave for several weeks. Your income drops temporarily.",
+    choices: [
+      {
+        id: "unpaid-leave-extend-term",
+        label: "Extend the term by 12 months to reduce monthly repayments",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            termMonthsRemaining: loan.termMonthsRemaining + 12,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Monthly repayments reduce, but you pay interest for longer, increasing the total cost of credit.",
+        nextScenarioId: 9,
+      },
+      {
+        id: "unpaid-leave-keep-term",
+        label: "Keep the same loan term and rely on savings for the short term",
+        apply: (loan) => loan,
+        explanation:
+          "Your loan stays unchanged. This can be cheaper long-term, but depends on having savings available.",
+        nextScenarioId: 9,
+      },
+    ],
+  },
+
+  // Non-financial 3 (Fuel shock)
+  {
+    id: 9,
+    title: "External Shock: Fuel Prices Rise",
+    description:
+      "Fuel prices rise sharply due to external factors. Your monthly travel costs increase by about €60.",
+    choices: [
+      {
+        id: "fuel-rise-extend-term",
+        label: "Extend the loan by 6 months to create budget breathing room",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            termMonthsRemaining: loan.termMonthsRemaining + 6,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "You reduce monthly repayments to help your budget, but increase the interest paid over time.",
+        nextScenarioId: 10,
+      },
+      {
+        id: "fuel-rise-keep-term",
+        label: "Keep the loan the same and reduce spending elsewhere",
+        apply: (loan) => loan,
+        explanation:
+          "The loan stays the same, but your budget gets tighter due to higher running costs.",
+        nextScenarioId: 10,
+      },
+    ],
+  },
+
+  // Financial 1 (Income drop)
+  {
+    id: 10,
+    title: "Income Reduction",
+    description:
+      "Your income drops by €400 per month due to reduced working hours. You need to lower your monthly outgoings.",
+    choices: [
+      {
+        id: "income-drop-extend-12",
+        label: "Extend the term by 12 months to reduce repayments",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            termMonthsRemaining: loan.termMonthsRemaining + 12,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Extending the term reduces monthly repayments but increases total interest over the agreement.",
+        nextScenarioId: 11,
+      },
+      {
+        id: "income-drop-keep",
+        label: "Keep the agreement the same and cut spending elsewhere",
+        apply: (loan) => loan,
+        explanation:
+          "Your loan cost stays the same, but your monthly budget becomes tighter.",
+        nextScenarioId: 11,
+      },
+    ],
+  },
+
+  // Financial 2 (Refinance)
+  {
+    id: 11,
+    title: "Refinance Offer",
+    description:
+      "A new lender offers a lower APR, but charges a €600 setup fee to refinance. What do you do?",
+    choices: [
+      {
+        id: "refinance-accept",
+        label: "Accept the refinance (add €600 fee to the balance)",
+        apply: (loan) => {
+          // Example: reduce rate by 1%, add fee to principal
+          const updated: LoanState = {
+            ...loan,
+            annualRate: Math.max(loan.annualRate - 0.01, 0),
+            principal: loan.principal + 600,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "A lower APR can reduce interest, but fees increase your balance. The best option depends on your remaining term.",
+        nextScenarioId: 12,
+      },
+      {
+        id: "refinance-decline",
+        label: "Decline and stay with your current lender",
+        apply: (loan) => loan,
+        explanation:
+          "You avoid the fee and keep things simple, but you may pay more interest compared to a lower APR option.",
+        nextScenarioId: 12,
+      },
+    ],
+  },
+
+  // Financial 3 (Early sale)
+  {
+    id: 12,
+    title: "Selling the Car Early",
+    description:
+      "You are considering selling the car before the finance ends. This could leave you in negative equity depending on the sale price.",
+    choices: [
+      {
+        id: "sell-early-reduce-term",
+        label: "Increase payments by reducing the term by 6 months to clear the balance faster",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            termMonthsRemaining: Math.max(loan.termMonthsRemaining - 6, 1),
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Clearing the loan faster reduces the risk of negative equity, but increases monthly repayments.",
+        nextScenarioId: 13,
+      },
+      {
+        id: "sell-early-keep",
+        label: "Keep the current schedule for affordability",
+        apply: (loan) => loan,
+        explanation:
+          "Your repayments stay affordable, but you may owe more than the car is worth for longer.",
+        nextScenarioId: 13,
+      },
+    ],
+  },
+
+  // Financial 4 (Insurance excess)
+  {
+    id: 13,
+    title: "Insurance Excess Payment",
+    description:
+      "You have a minor accident and must pay a €750 insurance excess. How do you handle the cost?",
+    choices: [
+      {
+        id: "excess-add-finance",
+        label: "Add €750 to the finance balance",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            principal: loan.principal + 750,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Spreading the cost helps short-term cashflow, but increases interest because your balance is higher.",
+        nextScenarioId: 14,
+      },
+      {
+        id: "excess-pay-savings",
+        label: "Pay the €750 from savings",
+        apply: (loan) => loan,
+        explanation:
+          "The loan stays unchanged, but your savings/emergency fund is reduced.",
+        nextScenarioId: 14,
+      },
+    ],
+  },
+
+  // Financial 5 (Rate decrease)
+  {
+    id: 14,
+    title: "Interest Rate Decrease",
+    description:
+      "Market rates fall and your lender offers to reduce your APR by 0.75%. Do you accept?",
+    choices: [
+      {
+        id: "rate-down-accept",
+        label: "Accept the lower interest rate",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            annualRate: Math.max(loan.annualRate - 0.0075, 0),
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "A lower APR reduces interest costs and can reduce repayments over the remaining term.",
+        nextScenarioId: 15,
+      },
+      {
+        id: "rate-down-decline",
+        label: "Decline and keep the current rate (no changes)",
+        apply: (loan) => loan,
+        explanation:
+          "The loan remains unchanged. This can make sense if there are hidden conditions in real life, but here it keeps costs higher.",
+        nextScenarioId: 15,
+      },
+    ],
+  },
+
+  // Financial 6 (PCP mileage penalty - only meaningful for PCP)
+  {
+    id: 15,
+    title: "PCP Mileage Penalty",
+    description:
+      "You exceeded your PCP mileage limit and may face an extra €500 charge at the end of the agreement.",
+    choices: [
+      {
+        id: "pcp-mileage-pay-now",
+        label: "Set aside €500 now (treated as adding to balloon amount)",
+        apply: (loan) => {
+          if (loan.financeType !== "pcp") return loan;
+          const updated: LoanState = {
+            ...loan,
+            balloon: loan.balloon + 500,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Planning for the mileage charge avoids a surprise later, but increases the total end cost for PCP users.",
+        nextScenarioId: 16,
+      },
+      {
+        id: "pcp-mileage-ignore",
+        label: "Ignore it for now and deal with it later",
+        apply: (loan) => loan,
+        explanation:
+          "No immediate change, but you risk a larger end-of-term bill in a PCP agreement.",
+        nextScenarioId: 16,
+      },
+    ],
+  },
+
+  // Financial 7 (€1,000 gift)
+  {
+    id: 16,
+    title: "Unexpected Gift",
+    description:
+      "You receive €1,000 as a gift. What do you do with it?",
+    choices: [
+      {
+        id: "gift-pay-1000",
+        label: "Pay €1,000 off the finance balance",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            principal: Math.max(loan.principal - 1000, 0),
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Reducing principal early lowers interest and can improve the overall cost of the finance agreement.",
+        nextScenarioId: 17,
+      },
+      {
+        id: "gift-save-1000",
+        label: "Keep the €1,000 in savings",
+        apply: (loan) => loan,
+        explanation:
+          "You keep liquidity and emergency savings, but your loan costs remain unchanged.",
+        nextScenarioId: 17,
+      },
+    ],
+  },
+
+  // Financial 8 (Extension offer)
+  {
+    id: 17,
+    title: "Loan Extension Offer",
+    description:
+      "Your lender offers to extend the loan term to reduce monthly repayments. Do you accept the extension?",
+    choices: [
+      {
+        id: "extension-accept-12",
+        label: "Accept the extension (extend by 12 months)",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            termMonthsRemaining: loan.termMonthsRemaining + 12,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Monthly repayments can reduce, but the loan lasts longer and total interest increases.",
+      },
+      {
+        id: "extension-decline",
+        label: "Decline and keep the original term",
+        apply: (loan) => loan,
+        explanation:
+          "Your loan stays unchanged. This keeps the finish date the same and can reduce interest compared to extending.",
       },
     ],
   },
