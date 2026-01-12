@@ -59,6 +59,18 @@ type ScenarioNode = {
   choices: ScenarioChoice[];
 };
 
+//Array shuffling logic adapted from GeeksforGeeks:
+//"How to Shuffle an Array Using JavaScript" https://www.geeksforgeeks.org/javascript/how-to-shuffle-an-array-using-javascript/
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array]; // copy to keep original order intact
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+
 //currency rounding
 function round2(x: number) {
   return Math.round(x * 100) / 100;
@@ -432,14 +444,12 @@ const loanScenarios: ScenarioNode[] = [
     ],
   },
 
-  // -------------------------
+  
   // NEW SCENARIOS (Iteration 3)
-  // -------------------------
-
-  // Non-financial 1 (Lifestyle change)
+  // Non-financial 1 (Location change)
   {
     id: 7,
-    title: "Lifestyle Change: More Driving",
+    title: "Location Change: More Driving",
     description:
       "You move further from work and start driving a lot more. Wear and tear increases and your monthly car costs rise.",
     choices: [
@@ -537,7 +547,7 @@ const loanScenarios: ScenarioNode[] = [
     id: 10,
     title: "Income Reduction",
     description:
-      "Your income drops by €400 per month due to reduced working hours. You need to lower your monthly outgoings.",
+      "Your income drops by €400 per month due to reduced working hours. You need to lower your monthly expenditure.",
     choices: [
       {
         id: "income-drop-extend-12",
@@ -996,11 +1006,14 @@ function FinalSummary({
 //Layout and progress bar adapted from W3Schools "How To - Progress Bars"
 function LoanSimulation({
   initialLoan,
+  scenarios,
   onExit,
 }: {
   initialLoan: LoanState;
+  scenarios: ScenarioNode[];
   onExit: () => void;
 }) {
+
   const [loan, setLoan] = useState<LoanState>(initialLoan);
   const [scenarioId, setScenarioId] = useState<number>(0);
   const [explanation, setExplanation] = useState<string | null>(null);
@@ -1008,8 +1021,8 @@ function LoanSimulation({
   const [showSummary, setShowSummary] = useState(false);
   const [decisionHistory, setDecisionHistory] = useState<string[]>([]);
 
-  const scenario = loanScenarios.find((s) => s.id === scenarioId);
-  const totalScenarios = loanScenarios.length;
+  const scenario = scenarios[scenarioId] ?? null;
+  const totalScenarios = scenarios.length;
   const currentIndex = scenario
     ? loanScenarios.findIndex((s) => s.id === scenario.id) + 1
     : totalScenarios;
@@ -1373,6 +1386,8 @@ export default function CarFinanceSimulatorPage() {
   const [termMonths, setTermMonths] = useState(60);
   const [balloon, setBalloon] = useState(10000); //used for PCP only
   const [error, setError] = useState<string | null>(null);
+  const [shuffledScenarios, setShuffledScenarios] = useState<ScenarioNode[]>([]); //shuffles the scenarios when starting simulator
+
 
   //keep a separate string for the term input to avoid getting stuck at 1
   const [termStr, setTermStr] = useState("60");
@@ -1392,12 +1407,16 @@ export default function CarFinanceSimulatorPage() {
 
   //Start the simulator with the current inputs
   function handleBeginSimulator() {
-    if (!result || error) return;
-    const inputs: Inputs = { cashPrice, deposit, fees, aprPct, termMonths, financeType, balloon };
-    const initialLoan = createInitialLoanState(inputs, result);
-    setSimLoan(initialLoan);
-    setMode("simulate");
-  }
+  if (!result || error) return;
+
+  const inputs: Inputs = { cashPrice, deposit, fees, aprPct, termMonths, financeType, balloon };
+  const initialLoan = createInitialLoanState(inputs, result);
+
+  setShuffledScenarios(shuffleArray(loanScenarios)); 
+  setSimLoan(initialLoan);
+  setMode("simulate");
+}
+
 
   //UI structure for the simulator page
   //W3Schools ("React Forms") and React.dev documentation, with structure refined
@@ -1670,10 +1689,11 @@ export default function CarFinanceSimulatorPage() {
       {/*simulation – uses the Game/Story-style structure inspired by GeeksforGeeks*/}
       {mode === "simulate" && simLoan && (
         <LoanSimulation
-          initialLoan={simLoan}
-          onExit={() => {
-            setMode("setup");
-            setSimLoan(null);
+    initialLoan={simLoan}
+    scenarios={shuffledScenarios}
+    onExit={() => {
+      setMode("setup");
+      setSimLoan(null);
           }}
         />
       )}
