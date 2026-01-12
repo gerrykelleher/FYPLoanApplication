@@ -1014,21 +1014,22 @@ function LoanSimulation({
   onExit: () => void;
 }) {
 
+
   const [loan, setLoan] = useState<LoanState>(initialLoan);
-  const [scenarioId, setScenarioId] = useState<number>(0);
+  const [scenarioIndex, setScenarioIndex] = useState<number>(0);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [previousLoan, setPreviousLoan] = useState<LoanState | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [decisionHistory, setDecisionHistory] = useState<string[]>([]);
 
-  const scenario = scenarios[scenarioId] ?? null;
+  const scenario = scenarios[scenarioIndex] ?? null;
   const totalScenarios = scenarios.length;
-  const currentIndex = scenario
-    ? loanScenarios.findIndex((s) => s.id === scenario.id) + 1
-    : totalScenarios;
+  const currentIndex = scenario ? scenarioIndex + 1 : totalScenarios;
 
   const progressPct =
-    totalScenarios > 0 ? (currentIndex / totalScenarios) * 100 : 0;
+  totalScenarios > 0 ? (currentIndex / totalScenarios) * 100 : 0;
+
+
 
   function handleChoice(choice: ScenarioChoice) {
     //stores current loan for before/after comparison
@@ -1041,18 +1042,20 @@ function LoanSimulation({
     setLoan(updatedLoan);
     setExplanation(choice.explanation);
 
-    if (typeof choice.nextScenarioId === "number") {
-      setScenarioId(choice.nextScenarioId);
-    } else {
-      //no next scenario defined, mark as finished and show summary
-      setScenarioId(-1);
+    const nextIndex = scenarioIndex + 1;
+
+    if (nextIndex >= scenarios.length) {
       setShowSummary(true);
+      setScenarioIndex(scenarios.length); // forces scenario to null
+    } else {
+      setScenarioIndex(nextIndex);
     }
   }
 
+
   function handleRestart() {
     setLoan(initialLoan);
-    setScenarioId(0);
+    setScenarioIndex(0);
     setExplanation(null);
     setPreviousLoan(null);
     setShowSummary(false);
@@ -1689,11 +1692,11 @@ export default function CarFinanceSimulatorPage() {
       {/*simulation – uses the Game/Story-style structure inspired by GeeksforGeeks*/}
       {mode === "simulate" && simLoan && (
         <LoanSimulation
-    initialLoan={simLoan}
-    scenarios={shuffledScenarios}
-    onExit={() => {
-      setMode("setup");
-      setSimLoan(null);
+          initialLoan={simLoan}
+          scenarios={shuffledScenarios}
+          onExit={() => {
+            setMode("setup");
+            setSimLoan(null);
           }}
         />
       )}
@@ -1764,4 +1767,4 @@ function Td({ children }: { children: React.ReactNode }) {
 //Final summary modal layout (overlay, centred content and card-style stats) adapted from W3Schools:
 //"How To - CSS Modals" and "How To - CSS Cards" (accessed Nov 2025):
 //https://www.w3schools.com/howto/howto_css_modals.asp
-//https://www.w3schools.com/howto/howto_css_cards.asp
+//https://www.w3schools.com/howto/howto_css_cards.asp 
