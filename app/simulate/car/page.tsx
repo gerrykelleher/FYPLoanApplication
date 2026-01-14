@@ -48,6 +48,7 @@ type ScenarioChoice = {
   apply: (loan: LoanState) => LoanState; //function that applies this choice to a LoanState
   explanation: string;                   //text explaining the impact of this choice
   nextScenarioId?: number;               //optional next scenario id to go to after this choice
+  endsSimulation?: boolean;              //optional: ends the simulation if true
 };
 
 //Scenario node structure
@@ -388,20 +389,21 @@ const loanScenarios: ScenarioNode[] = [
       "Your lender offers a discounted settlement figure if you clear the finance now. You could use savings or borrow from family.",
     choices: [
       {
-        id: "settle-now",
-        label: "Use savings to settle the loan now",
-        apply: (loan) => ({
-          ...loan,
-          principal: 0,
-          balloon: 0,
-          termMonthsRemaining: 0,
-          monthlyPayment: 0,
-          totalInterestOnFinance: 0,
-        }),
-        explanation:
-          "You cleared the loan and saved interest, but used a large amount of savings.",
-        nextScenarioId: 6,
-      },
+  id: "settle-now",
+  label: "Use savings to settle the loan now",
+  endsSimulation: true, // ✅ stop immediately if chosen
+  apply: (loan) => ({
+    ...loan,
+    principal: 0,
+    balloon: 0,
+    termMonthsRemaining: 0,
+    monthlyPayment: 0,
+    totalInterestOnFinance: 0,
+  }),
+  explanation:
+    "You cleared the loan and saved interest, but used a large amount of savings.",
+},
+
       {
         id: "continue-loan",
         label: "Continue with the current loan",
@@ -1032,25 +1034,32 @@ function LoanSimulation({
 
 
   function handleChoice(choice: ScenarioChoice) {
-    //stores current loan for before/after comparison
-    setPreviousLoan(loan);
+  //stores current loan for before/after comparison
+  setPreviousLoan(loan);
 
-    //record the label of the decision
-    setDecisionHistory((prev) => [...prev, choice.label]);
+  //record the label of the decision
+  setDecisionHistory((prev) => [...prev, choice.label]);
 
-    const updatedLoan = choice.apply(loan);
-    setLoan(updatedLoan);
-    setExplanation(choice.explanation);
+  const updatedLoan = choice.apply(loan);
+  setLoan(updatedLoan);
+  setExplanation(choice.explanation);
 
-    const nextIndex = scenarioIndex + 1;
-
-    if (nextIndex >= scenarios.length) {
-      setShowSummary(true);
-      setScenarioIndex(scenarios.length); // forces scenario to null
-    } else {
-      setScenarioIndex(nextIndex);
-    }
+  //stop early if this choice ends the simulation
+  if (choice.endsSimulation) {
+    setShowSummary(true);
+    setScenarioIndex(scenarios.length); // forces scenario to null
+    return;
   }
+
+  const nextIndex = scenarioIndex + 1;
+
+  if (nextIndex >= scenarios.length) {
+    setShowSummary(true);
+    setScenarioIndex(scenarios.length); // forces scenario to null
+  } else {
+    setScenarioIndex(nextIndex);
+  }
+}
 
 
   function handleRestart() {
