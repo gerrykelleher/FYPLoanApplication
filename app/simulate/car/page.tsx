@@ -1409,16 +1409,20 @@ export default function CarFinanceSimulatorPage() {
   }, [cashPrice, deposit, fees, aprPct, termMonths, financeType, balloon]);
 
   //Start the simulator with the current inputs
-  function handleBeginSimulator() {
+ function handleBeginSimulator() {
   if (!result || error) return;
 
   const inputs: Inputs = { cashPrice, deposit, fees, aprPct, termMonths, financeType, balloon };
   const initialLoan = createInitialLoanState(inputs, result);
 
-  setShuffledScenarios(shuffleArray(loanScenarios)); 
+  const shuffled = shuffleArray(loanScenarios);
+  const selected = shuffled.slice(0, 10); //10 scenarios per simulation
+
+  setShuffledScenarios(selected);
   setSimLoan(initialLoan);
   setMode("simulate");
 }
+
 
 
   //UI structure for the simulator page
