@@ -1023,6 +1023,8 @@ function LoanSimulation({
   const [previousLoan, setPreviousLoan] = useState<LoanState | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [decisionHistory, setDecisionHistory] = useState<string[]>([]);
+  const [endMessage, setEndMessage] = useState<string | null>(null);
+
 
   const scenario = scenarios[scenarioIndex] ?? null;
   const totalScenarios = scenarios.length;
@@ -1044,8 +1046,22 @@ function LoanSimulation({
   setLoan(updatedLoan);
   setExplanation(choice.explanation);
 
-  //stop early if this choice ends the simulation
+  //If finance is fully cleared, end simulation early
+const outstanding =
+  updatedLoan.principal +
+  (updatedLoan.financeType === "pcp" ? updatedLoan.balloon : 0);
+
+if (outstanding <= 0) {
+  setEndMessage("Simulation ended early: your finance balance reached €0.");
+  setShowSummary(true);
+  setScenarioIndex(scenarios.length); // forces scenario to null
+  return;
+}
+
+
+  //stop early if the choice indicates to end the simulation
   if (choice.endsSimulation) {
+    setEndMessage("Simulation ended early: you chose to settle the finance agreement.");
     setShowSummary(true);
     setScenarioIndex(scenarios.length); // forces scenario to null
     return;
@@ -1069,6 +1085,7 @@ function LoanSimulation({
     setPreviousLoan(null);
     setShowSummary(false);
     setDecisionHistory([]);
+    setEndMessage(null);
   }
 
   //helper to render change arrows/colour
@@ -1322,11 +1339,17 @@ function LoanSimulation({
           >
             <div className="card-body">
               <h2 className="card-title">Simulation complete</h2>
-              <p className="card-text">
-                You have reached the end of the current set of scenarios. You
-                can restart, or go back to the calculator to try different loan
-                details.
-              </p>
+
+                { endMessage ? (
+                  <p className="card-text">
+                    {endMessage} You can restart, or go back to the calculator to try different loan details.
+                  </p>
+                ) : (
+                  <p className="card-text">
+                    You have reached the end of the current set of scenarios. You can restart, or go back to the calculator to try different loan details.
+                  </p>
+                )}
+
               <button className="btn btn-secondary" onClick={handleRestart}>
                 Restart Simulation
               </button>
