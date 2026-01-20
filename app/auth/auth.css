@@ -153,11 +153,24 @@
   transform: translateX(0);
 }
 
-.ghost {
-  background: transparent !important;
-  border: 2px solid rgba(255,255,255,0.9) !important;
-  color: #fff !important;
+button.ghost {
+  background-color: transparent;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  padding: 12px 36px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
+
+button.ghost:hover {
+  background-color: #ffffff;
+  color: #2bb673;
+  transform: scale(1.05);
+}
+
 
 /* ACTIVE STATE (register) */
 .auth-container.active .sign-in {
