@@ -8,6 +8,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import "./auth.css";
+import Navbar from "../components/navbar";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function AuthPage() {
@@ -49,111 +50,116 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className={`auth-container ${mode === "register" ? "active" : ""}`}>
-        {/* LOGIN */}
-        <div className="form-container sign-in">
-          <form onSubmit={handleSubmit}>
-            <h1>Sign In</h1>
-            <span>Use your email and password</span>
+    <>
+      <Navbar />
+      <div style={{ height: "90px" }} />
 
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
+      <div className="auth-page">
+        <div className={`auth-container ${mode === "register" ? "active" : ""}`}>
+          {/* LOGIN */}
+          <div className="form-container sign-in">
+            <form onSubmit={handleSubmit}>
+              <h1>Sign In</h1>
+              <span>Use your email and password</span>
 
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-            />
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
 
-            <button type="submit" disabled={loading}>
-              {loading ? "Please wait..." : "Login"}
-            </button>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
+              />
 
-            {msg && <p className="msg">{msg}</p>}
-          </form>
-        </div>
-
-        {/* REGISTER */}
-        <div className="form-container sign-up">
-          <form onSubmit={handleSubmit}>
-            <h1>Create Account</h1>
-            <span>Register with email and password</span>
-
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
-
-            <button type="submit" disabled={loading}>
-              {loading ? "Please wait..." : "Register"}
-            </button>
-
-            {msg && <p className="msg">{msg}</p>}
-          </form>
-        </div>
-
-        {/* TOGGLE PANEL */}
-        <div className="toggle-container">
-          <div className="toggle">
-            <div className="toggle-panel toggle-left">
-              <h1>Welcome back!</h1>
-              <p>Already have an account? Log in to save simulations.</p>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => {
-                  setMsg(null);
-                  setMode("login");
-                }}
-              >
-                Sign In
+              <button type="submit" disabled={loading}>
+                {loading ? "Please wait..." : "Login"}
               </button>
-            </div>
 
-            <div className="toggle-panel toggle-right">
-              <h1>Welcome!</h1>
-              <p>Don't have an account? Register to save simulations.</p>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => {
-                  setMsg(null);
-                  setMode("register");
-                }}
-              >
-                Register
+              {msg && <p className="msg">{msg}</p>}
+            </form>
+          </div>
+
+          {/* REGISTER */}
+          <div className="form-container sign-up">
+            <form onSubmit={handleSubmit}>
+              <h1>Create Account</h1>
+              <span>Register with email and password</span>
+
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+              />
+
+              <button type="submit" disabled={loading}>
+                {loading ? "Please wait..." : "Register"}
               </button>
+
+              {msg && <p className="msg">{msg}</p>}
+            </form>
+          </div>
+
+          {/* TOGGLE PANEL */}
+          <div className="toggle-container">
+            <div className="toggle">
+              <div className="toggle-panel toggle-left">
+                <h1>Welcome back!</h1>
+                <p>Already have an account? Log in to save simulations.</p>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => {
+                    setMsg(null);
+                    setMode("login");
+                  }}
+                >
+                  Sign In
+                </button>
+              </div>
+
+              <div className="toggle-panel toggle-right">
+                <h1>Welcome!</h1>
+                <p>Don't have an account? Register to save simulations.</p>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => {
+                    setMsg(null);
+                    setMode("register");
+                  }}
+                >
+                  Register
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <p className="note">
-        You can still use the simulator without logging in.
-      </p>
-    </div>
+        <p className="note">You can still use the simulator without logging in.</p>
+      </div>
+    </>
   );
 }
