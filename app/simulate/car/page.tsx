@@ -29,6 +29,205 @@ type Result = {
   rows: Row[];  //repayment schedule rows (first 12 months)
 };
 
+//preset finance options for user to choose from
+type FinancePreset = {
+  id: string;
+  label: string;
+  financeType: FinanceType;
+  cashPrice: number;
+  deposit: number;
+  fees: number;
+  aprPct: number;
+  termMonths: number;
+  balloon?: number; // PCP only
+};
+
+//preset car finance options
+const financePresets: FinancePreset[] = [
+  //Student / budget (Loan)
+  {
+    id: "ford-fiesta-used",
+    label: "Used Ford Fiesta (Loan)",
+    financeType: "loan",
+    cashPrice: 12000,
+    deposit: 1500,
+    fees: 0,
+    aprPct: 8.5,
+    termMonths: 48,
+  },
+  {
+    id: "toyota-yaris-used",
+    label: "Used Toyota Yaris (Loan)",
+    financeType: "loan",
+    cashPrice: 13500,
+    deposit: 2000,
+    fees: 0,
+    aprPct: 8.2,
+    termMonths: 48,
+  },
+  {
+    id: "toyota-corolla-used",
+    label: "Used Toyota Corolla (Loan)",
+    financeType: "loan",
+    cashPrice: 16500,
+    deposit: 2000,
+    fees: 0,
+    aprPct: 7.9,
+    termMonths: 48,
+  },
+  {
+    id: "vw-golf-used",
+    label: "Used VW Golf (Loan)",
+    financeType: "loan",
+    cashPrice: 19000,
+    deposit: 3000,
+    fees: 0,
+    aprPct: 7.5,
+    termMonths: 60,
+  },
+  {
+    id: "hyundai-i30-used",
+    label: "Used Hyundai i30 (Loan)",
+    financeType: "loan",
+    cashPrice: 17500,
+    deposit: 2500,
+    fees: 0,
+    aprPct: 7.8,
+    termMonths: 60,
+  },
+
+  //Graduate / premium (PCP)
+  {
+    id: "audi-a3-pcp",
+    label: "Audi A3 (PCP)",
+    financeType: "pcp",
+    cashPrice: 36000,
+    deposit: 4000,
+    fees: 0,
+    aprPct: 6.9,
+    termMonths: 48,
+    balloon: 16000,
+  },
+  {
+    id: "vw-golf-new-pcp",
+    label: "New VW Golf (PCP)",
+    financeType: "pcp",
+    cashPrice: 34000,
+    deposit: 3500,
+    fees: 0,
+    aprPct: 6.9,
+    termMonths: 48,
+    balloon: 15000,
+  },
+  {
+    id: "mercedes-a-class-pcp",
+    label: "Mercedes A-Class (PCP)",
+    financeType: "pcp",
+    cashPrice: 42000,
+    deposit: 5000,
+    fees: 0,
+    aprPct: 6.8,
+    termMonths: 48,
+    balloon: 19000,
+  },
+  {
+    id: "bmw-3series-pcp",
+    label: "BMW 3 Series (PCP)",
+    financeType: "pcp",
+    cashPrice: 48000,
+    deposit: 6000,
+    fees: 0,
+    aprPct: 6.5,
+    termMonths: 48,
+    balloon: 21000,
+  },
+
+  //Family / practical (PCP)
+  {
+    id: "skoda-octavia-pcp",
+    label: "Skoda Octavia (PCP)",
+    financeType: "pcp",
+    cashPrice: 38000,
+    deposit: 4000,
+    fees: 0,
+    aprPct: 6.8,
+    termMonths: 48,
+    balloon: 16500,
+  },
+  {
+    id: "toyota-rav4-pcp",
+    label: "Toyota RAV4 Hybrid (PCP)",
+    financeType: "pcp",
+    cashPrice: 52000,
+    deposit: 6000,
+    fees: 0,
+    aprPct: 6.4,
+    termMonths: 48,
+    balloon: 23000,
+  },
+
+  //Electric (PCP)
+  {
+    id: "tesla-model-3-pcp",
+    label: "Tesla Model 3 (PCP)",
+    financeType: "pcp",
+    cashPrice: 42000,
+    deposit: 5000,
+    fees: 0,
+    aprPct: 5.9,
+    termMonths: 36,
+    balloon: 18000,
+  },
+  {
+    id: "hyundai-kona-ev-pcp",
+    label: "Hyundai Kona Electric (PCP)",
+    financeType: "pcp",
+    cashPrice: 39500,
+    deposit: 4500,
+    fees: 0,
+    aprPct: 5.5,
+    termMonths: 36,
+    balloon: 17000,
+  },
+  {
+    id: "kia-ev6-pcp",
+    label: "Kia EV6 (PCP)",
+    financeType: "pcp",
+    cashPrice: 52000,
+    deposit: 6000,
+    fees: 0,
+    aprPct: 5.9,
+    termMonths: 36,
+    balloon: 24000,
+  },
+
+  //High-end / aspirational (PCP)
+  {
+    id: "bmw-4series-pcp",
+    label: "BMW 4 Series Coupe (PCP)",
+    financeType: "pcp",
+    cashPrice: 62000,
+    deposit: 7000,
+    fees: 0,
+    aprPct: 6.9,
+    termMonths: 48,
+    balloon: 30000,
+  },
+  {
+    id: "audi-a6-pcp",
+    label: "Audi A6 (PCP)",
+    financeType: "pcp",
+    cashPrice: 65000,
+    deposit: 8000,
+    fees: 0,
+    aprPct: 6.7,
+    termMonths: 48,
+    balloon: 32000,
+  },
+];
+
+
+
 //Simulation specific types
 type LoanState = {
   financeType: FinanceType;
@@ -1423,6 +1622,8 @@ export default function CarFinanceSimulatorPage() {
   const [error, setError] = useState<string | null>(null);
   const [shuffledScenarios, setShuffledScenarios] = useState<ScenarioNode[]>([]); //shuffles the scenarios when starting simulator
   const [showSchedule, setShowSchedule] = useState(false); //hides/shows repayment schedule
+  const [inputTab, setInputTab] = useState<"presets" | "custom">("presets");  //which input tab is active
+  const [selectedPresetId, setSelectedPresetId] = useState<string>(""); //which preset is selected
 
 
   //keep a separate string for the term input to avoid getting stuck at 1
@@ -1456,6 +1657,22 @@ export default function CarFinanceSimulatorPage() {
   setMode("simulate");
 }
 
+// Applies a selected preset to the calculator inputs
+function applyPreset(preset: FinancePreset) {
+  setFinanceType(preset.financeType);
+  setCashPrice(preset.cashPrice);
+  setDeposit(preset.deposit);
+  setFees(preset.fees);
+  setAprPct(preset.aprPct);
+  setTermMonths(preset.termMonths);
+  setTermStr(String(preset.termMonths)); // keep term input in sync
+
+  if (preset.financeType === "pcp") {
+    setBalloon(preset.balloon ?? 0);
+  }
+}
+
+
 
 
   //UI structure for the simulator page
@@ -1478,7 +1695,71 @@ export default function CarFinanceSimulatorPage() {
             Compare a standard <b>car loan</b> vs <b>PCP</b> (with balloon/GMFV).
           </p>
 
-          {/*Card-style wrapper for calculator */}
+                  {/*Card-style wrapper for calculator */}
+                  {/* Input mode tabs (Presets vs Custom) */}
+        <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
+          <button
+            type="button"
+            className={`btn ${inputTab === "presets" ? "btn-primary" : "btn-outline-primary"}`}
+            onClick={() => setInputTab("presets")}
+          >
+            Presets
+          </button>
+
+          <button
+            type="button"
+            className={`btn ${inputTab === "custom" ? "btn-primary" : "btn-outline-primary"}`}
+            onClick={() => setInputTab("custom")}
+          >
+            Enter your own custom details
+          </button>
+        </div>
+
+              {inputTab === "presets" && (
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "10px",
+            padding: "16px",
+            marginBottom: "20px",
+          }}
+        >
+          <label className="label">
+            <span className="tooltip">
+              Choose a car preset
+              <span className="tooltiptext">
+                Select a realistic Irish car finance example. You can still edit the details afterwards.
+              </span>
+            </span>
+
+            <select
+              className="select"
+              value={selectedPresetId}
+              onChange={(e) => {
+                const id = e.target.value;
+                setSelectedPresetId(id);
+
+                const preset = financePresets.find((p) => p.id === id);
+                if (preset) applyPreset(preset);
+              }}
+            >
+              <option value="">Select a preset...</option>
+              {financePresets.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <p className="small mt-8" style={{ opacity: 0.8 }}>
+            Tip: Switch to <b>custom details</b> to tweak the numbers after selecting a preset.
+          </p>
+        </div>
+      )}
+
+
           <div
             style={{
               backgroundColor: "#f9f9f9",
@@ -1489,6 +1770,7 @@ export default function CarFinanceSimulatorPage() {
             }}
           >
             {/*Inputs*/}
+            {inputTab === "custom" && (
             <div className="grid-2 mt-20">
               <div className="grid-gap-10">
                 {/*Finance Type*/}
@@ -1662,6 +1944,7 @@ export default function CarFinanceSimulatorPage() {
                 </div>
               </div>
             </div>
+            )}
 
             {/*Errors*/}
             {error && (
@@ -1681,7 +1964,7 @@ export default function CarFinanceSimulatorPage() {
                   <Stat label="Total cost of credit" value={`€${result.totalCostOfCredit.toFixed(2)}`} />
                 </div>
 
-                      {/* Repayment schedule dropdown */}
+                      {/* Repayment schedule dropdown (styled using ChatGPT assistance) */}
         <details className="mt-24" style={{ maxWidth: "100%" }}>
           <summary
             style={{
