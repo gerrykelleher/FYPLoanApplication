@@ -3,41 +3,49 @@
 //https://supabase.com/docs/guides/auth
 //https://supabase.com/docs/reference/javascript/auth-signinwithpassword
 //https://www.scribd.com/document/883924715/Design-a-Responsive-Sliding-Login-Registration-Form-Using-HTML-CSS-JavaScript-GeeksforGeeks
-"use client";
+
+
+"use client"; //this is a client component
 
 import { useState } from "react";
 import type { FormEvent } from "react";
 import "./auth.css";
 import Navbar from "../components/navbar";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";  //authentication client
+
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register">("login");  //mode toggle (login/register)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);  //feedback message
   const [loading, setLoading] = useState(false);
 
+  //handles form submission for both login and registration
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setMsg(null);
     setLoading(true);
 
+    //whitespace trimming
     const cleanEmail = email.trim();
     const cleanPassword = password.trim();
 
     try {
       if (mode === "register") {
+        //register new user
         const { error } = await supabase.auth.signUp({
           email: cleanEmail,
           password: cleanPassword,
         });
+        //set feedback message (error or success)
         setMsg(
           error
             ? error.message
             : "Registered! Check your email to confirm (if enabled)."
         );
       } else {
+        //login existing user
         const { error } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
           password: cleanPassword,
@@ -45,6 +53,7 @@ export default function AuthPage() {
         setMsg(error ? error.message : "Logged in!");
       }
     } finally {
+      //stop loading when request is finished 
       setLoading(false);
     }
   }

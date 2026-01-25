@@ -41,7 +41,7 @@ type LoanState = {
   currentMonth: number;         // for time-based scenarios if needed
 };
 
-// A single choice inside a scenario
+//A single choice inside a scenario
 type ScenarioChoice = {
   id: string;
   label: string;
@@ -1408,7 +1408,7 @@ if (outstanding <= 0) {
 
 //react component for the car finance simulator page
 export default function CarFinanceSimulatorPage() {
-  //mode switching: calculator vs simulator
+  //switches between setup/calculator and simulation mode
   const [mode, setMode] = useState<"setup" | "simulate">("setup");
   const [simLoan, setSimLoan] = useState<LoanState | null>(null);
 
@@ -1422,6 +1422,7 @@ export default function CarFinanceSimulatorPage() {
   const [balloon, setBalloon] = useState(10000); //used for PCP only
   const [error, setError] = useState<string | null>(null);
   const [shuffledScenarios, setShuffledScenarios] = useState<ScenarioNode[]>([]); //shuffles the scenarios when starting simulator
+  const [showSchedule, setShowSchedule] = useState(false); //hides/shows repayment schedule
 
 
   //keep a separate string for the term input to avoid getting stuck at 1
@@ -1509,6 +1510,7 @@ export default function CarFinanceSimulatorPage() {
                   </select>
                 </label>
 
+                {/*Where user edits inputs */}
                 {/*Car Price Input*/}
                 <label className="label">
                   <span className="tooltip">
@@ -1679,30 +1681,55 @@ export default function CarFinanceSimulatorPage() {
                   <Stat label="Total cost of credit" value={`€${result.totalCostOfCredit.toFixed(2)}`} />
                 </div>
 
-                {/*Repayments table*/}
-                <h3 className="mt-24">Repayments (first 12 months)</h3>
-                <table className="table mt-8">
-                  <thead>
-                    <tr>
-                      <Th>#</Th>
-                      <Th>Payment</Th>
-                      <Th>Interest</Th>
-                      <Th>Principal</Th>
-                      <Th>Balance</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.rows.map((r) => (
-                      <tr key={r.period}>
-                        <Td>{r.period}</Td>
-                        <Td>€{r.payment.toFixed(2)}</Td>
-                        <Td>€{r.interest.toFixed(2)}</Td>
-                        <Td>€{r.principal.toFixed(2)}</Td>
-                        <Td>€{r.balance.toFixed(2)}</Td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                      {/* Repayment schedule dropdown */}
+        <details className="mt-24" style={{ maxWidth: "100%" }}>
+          <summary
+            style={{
+              cursor: "pointer",
+              listStyle: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              padding: "12px 14px",
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "10px",
+              boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+              fontWeight: 600,
+            }}
+          >
+            <span>View repayment schedule (first 12 months)</span>
+            <span style={{ fontWeight: 500, opacity: 0.75 }}>Click to expand</span>
+          </summary>
+
+          <div style={{ marginTop: "12px" }}>
+            <table className="table mt-8">
+              <thead>
+                <tr>
+                  <Th>#</Th>
+                  <Th>Payment</Th>
+                  <Th>Interest</Th>
+                  <Th>Principal</Th>
+                  <Th>Balance</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.rows.map((r) => (
+                  <tr key={r.period}>
+                    <Td>{r.period}</Td>
+                    <Td>€{r.payment.toFixed(2)}</Td>
+                    <Td>€{r.interest.toFixed(2)}</Td>
+                    <Td>€{r.principal.toFixed(2)}</Td>
+                    <Td>€{r.balance.toFixed(2)}</Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+
 
                 {/*PCP note*/}
                 {financeType === "pcp" && (
