@@ -226,8 +226,6 @@ const financePresets: FinancePreset[] = [
   },
 ];
 
-
-
 //Simulation specific types
 type LoanState = {
   financeType: FinanceType;
@@ -1697,67 +1695,136 @@ function applyPreset(preset: FinancePreset) {
 
                   {/*Card-style wrapper for calculator */}
                   {/* Input mode tabs (Presets vs Custom) */}
-        <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
+                  {/* Input mode tabs – visual structure adapted from W3Schools Tabs, logic implemented with React state */}
+        <div
+          className="tab"
+          role="tablist"
+          aria-label="Input mode tabs"
+          style={{ marginBottom: "16px" }}
+        >
           <button
             type="button"
-            className={`btn ${inputTab === "presets" ? "btn-primary" : "btn-outline-primary"}`}
+            className={`tablinks ${inputTab === "presets" ? "active" : ""}`}
             onClick={() => setInputTab("presets")}
+            role="tab"
+            aria-selected={inputTab === "presets"}
           >
-            Presets
+            🚗 Example cars
           </button>
 
           <button
             type="button"
-            className={`btn ${inputTab === "custom" ? "btn-primary" : "btn-outline-primary"}`}
+            className={`tablinks ${inputTab === "custom" ? "active" : ""}`}
             onClick={() => setInputTab("custom")}
+            role="tab"
+            aria-selected={inputTab === "custom"}
           >
-            Enter your own custom details
+            ✏️ Custom details
           </button>
         </div>
 
-              {inputTab === "presets" && (
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "10px",
-            padding: "16px",
-            marginBottom: "20px",
-          }}
-        >
-          <label className="label">
-            <span className="tooltip">
-              Choose a car preset
-              <span className="tooltiptext">
-                Select a realistic Irish car finance example. You can still edit the details afterwards.
-              </span>
-            </span>
+        <p className="small" style={{ marginBottom: "12px", opacity: 0.75 }}>
+          Choose a preset to get started quickly, or enter your own finance details.
+        </p>
 
-            <select
-              className="select"
-              value={selectedPresetId}
-              onChange={(e) => {
-                const id = e.target.value;
-                setSelectedPresetId(id);
-
-                const preset = financePresets.find((p) => p.id === id);
-                if (preset) applyPreset(preset);
+        {inputTab === "presets" && (
+          <div className="tabcontent">
+            <div
+              style={{
+                background: "linear-gradient(135deg, #f9fafb, #ffffff)",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "18px",
+                marginBottom: "20px",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.04)",
+                position: "relative",
               }}
             >
-              <option value="">Select a preset...</option>
-              {financePresets.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              <label className="label">
+                <span className="tooltip">
+                  Choose a car preset
+                  <span className="tooltiptext">
+                    Select a realistic Irish car finance example. You can still edit the
+                    details afterwards.
+                  </span>
+                </span>
 
-          <p className="small mt-8" style={{ opacity: 0.8 }}>
-            Tip: Switch to <b>custom details</b> to tweak the numbers after selecting a preset.
-          </p>
+                <div
+  style={{
+    position: "relative",
+    maxWidth: "720px",
+  }}
+>
+          <select
+            className="select"
+            value={selectedPresetId}
+            onChange={(e) => {
+              const id = e.target.value;
+              setSelectedPresetId(id);
+
+              const preset = financePresets.find((p) => p.id === id);
+              if (preset) {
+                applyPreset(preset);
+              }
+            }}
+            style={{
+              appearance: "none",
+              WebkitAppearance: "none",
+              MozAppearance: "none",
+              width: "100%",
+              padding: "12px 44px 12px 14px",
+              borderRadius: "10px",
+              border: "1px solid #d1d5db",
+              backgroundColor: "#ffffff",
+              fontSize: "0.95rem",
+              cursor: "pointer",
+              boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+              transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "#3b82f6";
+              e.currentTarget.style.boxShadow = "0 0 0 4px rgba(59,130,246,0.15)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "#d1d5db";
+              e.currentTarget.style.boxShadow = "0 1px 6px rgba(0,0,0,0.04)";
+            }}
+          >
+            <option value="">Select a preset...</option>
+            {financePresets.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Custom dropdown arrow */}
+          <span
+            style={{
+              position: "absolute",
+              right: "14px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+              color: "#6b7280",
+              fontSize: "0.9rem",
+            }}
+          >
+            ▼
+          </span>
         </div>
-      )}
+
+              </label>
+
+              <p className="small mt-8" style={{ color: "#6b7280" }}>
+                Selecting a preset will automatically populate realistic finance values.
+                You can fine-tune them in <b>Custom details</b>.
+              </p>
+            </div>
+          </div>
+        )}
+
+
 
 
           <div
