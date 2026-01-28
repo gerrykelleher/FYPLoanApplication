@@ -997,6 +997,142 @@ const loanScenarios: ScenarioNode[] = [
       },
     ],
   },
+
+    // Geopolitical / Trade: Tariffs increase vehicle and parts costs
+  {
+    id: 18,
+    title: "Global Trade Tariffs Raise Car Costs",
+    description:
+      "New global trade tariffs on vehicles and key components increase import costs across Europe. Dealers raise prices on new and used cars, and repair parts become more expensive.",
+    choices: [
+      {
+        id: "tariffs-absorb-cost",
+        label: "Accept higher monthly repayments to keep the same term",
+        apply: (loan) => {
+          //Simulate higher overall cost by increasing principal
+          const updated: LoanState = {
+            ...loan,
+            principal: loan.principal + 900, // realistic moderate shock
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "You kept the same term, but your balance increases due to higher vehicle/parts costs, which pushes up your repayment.",
+      },
+      {
+        id: "tariffs-extend-term",
+        label: "Extend the term by 6 months to reduce monthly pressure",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            principal: loan.principal + 900,
+            termMonthsRemaining: loan.termMonthsRemaining + 6,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Extending the term lowers the monthly impact, but you pay interest for longer, increasing the total cost.",
+      },
+    ],
+  },
+
+  //Economic: Inflation surge causes rate increases
+  {
+    id: 19,
+    title: "Inflation Surge Raises Interest Rates",
+    description:
+      "Inflation stays high and interest rates rise across the economy. Your lender increases your APR by 1.5%.",
+    choices: [
+      {
+        id: "inflation-keep-term",
+        label: "Accept the new APR and keep the same term",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            annualRate: loan.annualRate + 0.015,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Your monthly repayment increases because borrowing is now more expensive, but your finish date stays the same.",
+      },
+      {
+        id: "inflation-extend-12",
+        label: "Extend the term by 12 months to reduce the monthly repayment",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            annualRate: loan.annualRate + 0.015,
+            termMonthsRemaining: loan.termMonthsRemaining + 12,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Extending the term reduces the monthly pressure, but increases the total interest paid over the agreement.",
+      },
+    ],
+  },
+
+  //Policy: Government tax/emissions changes increase costs
+  {
+    id: 20,
+    title: "Government Policy Increases Vehicle Costs",
+    description:
+      "A change in vehicle tax/emissions charges increases your yearly motoring costs. Your monthly budget becomes tighter.",
+    choices: [
+      {
+        id: "policy-adjust-budget",
+        label: "Keep the finance the same and adjust your budget elsewhere",
+        apply: (loan) => loan,
+        explanation:
+          "Your loan stays unchanged, but higher running costs reduce your monthly flexibility.",
+      },
+      {
+        id: "policy-extend-term",
+        label: "Extend the term by 6 months to reduce monthly repayments",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            termMonthsRemaining: loan.termMonthsRemaining + 6,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Lower repayments create breathing room, but extending the term increases total interest paid.",
+      },
+    ],
+  },
+
+  //Personal: Family circumstance change increases expenses
+  {
+    id: 21,
+    title: "Family Circumstances Change",
+    description:
+      "A change in family circumstances increases your monthly expenses. You need to create more room in your budget.",
+    choices: [
+      {
+        id: "family-extend-term",
+        label: "Extend the term by 12 months to reduce monthly repayments",
+        apply: (loan) => {
+          const updated: LoanState = {
+            ...loan,
+            termMonthsRemaining: loan.termMonthsRemaining + 12,
+          };
+          return recalcLoanFromState(updated);
+        },
+        explanation:
+          "Extending the term reduces your monthly repayments, but you will pay interest for longer.",
+      },
+      {
+        id: "family-keep-term",
+        label: "Keep the same term and reduce spending elsewhere",
+        apply: (loan) => loan,
+        explanation:
+          "Your finance stays the same, but you must cut other spending to manage higher household costs.",
+      },
+    ],
+  },
+
 ];
 
 //Child component: responsible only for rendering only one scenario at a time
