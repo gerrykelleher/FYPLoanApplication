@@ -1740,6 +1740,32 @@ function applyPreset(preset: FinancePreset) {
                 position: "relative",
               }}
             >
+                  {/* Preset details */}
+                      {selectedPresetId && (
+          <div
+            style={{
+              marginTop: "12px",
+              padding: "12px 14px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "10px",
+              backgroundColor: "#f9fafb",
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: "8px" }}>Preset details</div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "8px" }}>
+              <div><b>Cash price:</b> €{cashPrice.toLocaleString()}</div>
+              <div><b>Deposit:</b> €{deposit.toLocaleString()}</div>
+              <div><b>APR:</b> {aprPct}%</div>
+              <div><b>Term:</b> {termMonths} months</div>
+
+              {financeType === "pcp" && (
+                <div><b>Balloon/GMFV:</b> €{balloon.toLocaleString()}</div>
+              )}
+            </div>
+          </div>
+        )}
+
               <label className="label">
                 <span className="tooltip">
                   Choose a car preset
@@ -2180,4 +2206,11 @@ function Td({ children }: { children: React.ReactNode }) {
 //Final summary modal layout (overlay, centred content and card-style stats) adapted from W3Schools:
 //"How To - CSS Modals" and "How To - CSS Cards" (accessed Nov 2025):
 //https://www.w3schools.com/howto/howto_css_modals.asp
-//https://www.w3schools.com/howto/howto_css_cards.asp 
+//https://www.w3schools.com/howto/howto_css_cards.asp
+
+//Dropdown select styling adapted from W3Schools "How To - Custom Select" (accessed Jan 2026):
+//https://www.w3schools.com/tags/tag_select.asp
+//https://www.w3schools.com/howto/howto_custom_select.asp
+
+//Tab structure and styling adapted from W3Schools "How To - CSS Tabs" (accessed Jan 2026):
+//https://www.w3schools.com/howto/howto_js_tabs.asp
