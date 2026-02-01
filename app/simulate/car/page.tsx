@@ -4,6 +4,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Navbar from "../../components/navbar";
+import {supabase} from "../../../lib/supabaseClient";
 
 //Types
 type FinanceType = "loan" | "pcp";
@@ -1207,6 +1208,67 @@ function FinalSummary({
   decisions: string[];
   onClose: () => void;
 }) {
+
+//Handles saving the simulation for signed-in users only
+//Authentication checks and Supabase persistence logic were implemented here
+//Generated with the help of ChatGPT based on Supabase documentation
+  //Check if a user is authenticated before allowing persistence
+  async function handleSaveSimulation() {
+    //Retrieve the currently authenticated user from Supabase Auth
+    //This ensures saved simulations are associated with a specific user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    //If no user is returned, the user is not signed in
+    if (!user) {
+      alert("Please sign in to save your simulation.");
+      return;
+    }
+
+    //Handles saving the simulation for signed-in users only
+async function handleSaveSimulation() {
+  //Retrieve the currently authenticated user
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    alert("Please sign in to save your simulation.");
+    return;
+  }
+
+  //Insert the simulation into Supabase
+  const { error } = await supabase
+    .from("saved_simulations")
+    .insert({
+      user_id: user.id,
+
+      finance_type: finalLoan.financeType,
+      cash_price: finalLoan.principal, //or original cashPrice if you later pass it down
+      deposit: 0,                      //same note as above
+      apr: finalLoan.annualRate * 100,
+      term_months: finalLoan.termMonthsRemaining,
+      balloon: finalLoan.financeType === "pcp" ? finalLoan.balloon : null,
+
+      final_monthly_payment: finalLoan.monthlyPayment,
+      total_interest: finalLoan.totalInterestOnFinance,
+      months_remaining: finalLoan.termMonthsRemaining,
+
+      decisions: decisions,
+    });
+
+  if (error) {
+    console.error(error);
+    alert("Failed to save simulation. Please try again.");
+    return;
+  }
+
+  alert("Simulation saved successfully!");
+}
+
+  }
   const summaryCardStyle: React.CSSProperties = {
     backgroundColor: "#f9fafb",
     borderRadius: "10px",
@@ -1308,6 +1370,29 @@ function FinalSummary({
             </li>
           ))}
         </ul>
+        
+        {/* Save button */}
+            <button
+        onClick={handleSaveSimulation}
+        style={{
+          backgroundColor: "#10b981",
+          color: "white",
+          padding: "10px 22px",
+          borderRadius: "8px",
+          border: "none",
+          cursor: "pointer",
+          fontSize: "1rem",
+          transition: "0.2s",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.opacity = "0.85";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.opacity = "1";
+        }}
+      >
+        Save simulation
+      </button>
 
         {/* Close button */}
         <button
