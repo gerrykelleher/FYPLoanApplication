@@ -1208,66 +1208,55 @@ function FinalSummary({
   decisions: string[];
   onClose: () => void;
 }) {
-
-//Handles saving the simulation for signed-in users only
-//Authentication checks and Supabase persistence logic were implemented here
-//Generated with the help of ChatGPT based on Supabase documentation
-  //Check if a user is authenticated before allowing persistence
+  // Handles saving the simulation for signed-in users only.
+  // Auth check + insert logic was created with ChatGPT assistance, based on Supabase docs.
   async function handleSaveSimulation() {
-    //Retrieve the currently authenticated user from Supabase Auth
-    //This ensures saved simulations are associated with a specific user
+    console.log("SAVE: clicked");
+
+    // 1) Get the signed-in user
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
 
-    //If no user is returned, the user is not signed in
-    if (!user) {
+    console.log("SAVE: user =", user);
+    console.log("SAVE: authError =", authError);
+
+    if (authError || !user) {
       alert("Please sign in to save your simulation.");
       return;
     }
 
-    //Handles saving the simulation for signed-in users only
-async function handleSaveSimulation() {
-  //Retrieve the currently authenticated user
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+    // 2) Insert into saved_simulations
+    const { data, error } = await supabase
+      .from("saved_simulations")
+      .insert({
+        user_id: user.id,
 
-  if (authError || !user) {
-    alert("Please sign in to save your simulation.");
-    return;
-  }
+        finance_type: finalLoan.financeType,
+        cash_price: finalLoan.principal, // note: currently using financed amount (principal)
+        deposit: 0,                      // you can pass real deposit later
+        apr: finalLoan.annualRate * 100,
+        term_months: finalLoan.termMonthsRemaining,
+        balloon: finalLoan.financeType === "pcp" ? finalLoan.balloon : null,
 
-  //Insert the simulation into Supabase
-  const { error } = await supabase
-    .from("saved_simulations")
-    .insert({
-      user_id: user.id,
+        final_monthly_payment: finalLoan.monthlyPayment,
+        total_interest: finalLoan.totalInterestOnFinance,
+        months_remaining: finalLoan.termMonthsRemaining,
 
-      finance_type: finalLoan.financeType,
-      cash_price: finalLoan.principal, //or original cashPrice if you later pass it down
-      deposit: 0,                      //same note as above
-      apr: finalLoan.annualRate * 100,
-      term_months: finalLoan.termMonthsRemaining,
-      balloon: finalLoan.financeType === "pcp" ? finalLoan.balloon : null,
+        decisions: decisions, // jsonb accepts arrays
+      })
+      .select(); // returns inserted row(s)
 
-      final_monthly_payment: finalLoan.monthlyPayment,
-      total_interest: finalLoan.totalInterestOnFinance,
-      months_remaining: finalLoan.termMonthsRemaining,
+    console.log("SAVE: insert data =", data);
+    console.log("SAVE: insert error =", error);
 
-      decisions: decisions,
-    });
+    if (error) {
+      alert("Failed to save simulation. Check console for details.");
+      return;
+    }
 
-  if (error) {
-    console.error(error);
-    alert("Failed to save simulation. Please try again.");
-    return;
-  }
-
-  alert("Simulation saved successfully!");
-}
-
+    alert("Simulation saved successfully!");
   }
   const summaryCardStyle: React.CSSProperties = {
     backgroundColor: "#f9fafb",
