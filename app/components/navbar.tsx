@@ -58,7 +58,7 @@ export default function Navbar() {
         {[
           { href: "/", label: "Home" },
           { href: "/simulate/car", label: "Car Loan Simulator" },
-          { href: "/simulate/mortgage", label: "Mortgage Simulator" },
+          { href: "/dashboard/simulations", label: "My Dashboard" },
         ].map(({ href, label }) => (
           <Link key={href} href={href}>
             <span

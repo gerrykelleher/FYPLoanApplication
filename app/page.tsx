@@ -74,10 +74,10 @@ export default function Home() {
             🚗 Car Finance Simulator
           </Link>
 
-          <Link href="/simulate/mortgage" style={buttonStyle} className="navBtn">
-            🏠 Mortgage Simulator
-          </Link>
-        </div>
+           <Link href="/dashboard/simulations" style={buttonStyle} className="navBtn">
+    📊 Dashboard (Saved Simulations)
+  </Link>
+</div>
 
         {/* Learn more link */}
         <div style={{ marginTop: "30px" }}>
