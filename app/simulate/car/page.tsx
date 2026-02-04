@@ -1139,6 +1139,7 @@ const loanScenarios: ScenarioNode[] = [
 //Child component: responsible only for rendering only one scenario at a time
 //Pattern inspired by "Story" component in GeeksforGeeks text adventure.
 //Layout and card styling adapted from W3Schools "How to - cards"
+//Save simulation UX enhancements (loading state, success feedback, disabled states) were implemented with guidance from ChatGPT
 function LoanScenarioView({
   scenario,
   onChoose, //when the choice is made, calls back to parent with the selected choice
@@ -1197,8 +1198,9 @@ function LoanScenarioView({
   );
 }
 
-//Final summary card adapted from W3Schools "How To - CSS Modals"
-//and "How To - CSS Cards"
+// Final summary card adapted from W3Schools "How To - CSS Modals" and "How To - CSS Cards"
+import Link from "next/link";
+
 function FinalSummary({
   finalLoan,
   decisions,
@@ -1208,56 +1210,66 @@ function FinalSummary({
   decisions: string[];
   onClose: () => void;
 }) {
-  // Handles saving the simulation for signed-in users only.
-  // Auth check + insert logic was created with ChatGPT assistance, based on Supabase docs.
-  async function handleSaveSimulation() {
-    console.log("SAVE: clicked");
+  // Tracks whether the save request is currently in progress
+  const [isSaving, setIsSaving] = useState(false);
 
-    // 1) Get the signed-in user
+  // Tracks whether the simulation has been successfully saved
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Stores any save-related error message
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Handles saving the simulation for signed-in users only
+  async function handleSaveSimulation() {
+    // Prevent duplicate saves
+    if (isSaving || isSaved) return;
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    // Retrieve the currently authenticated user from Supabase
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
-    console.log("SAVE: user =", user);
-    console.log("SAVE: authError =", authError);
-
+    // If no user is signed in, block saving
     if (authError || !user) {
-      alert("Please sign in to save your simulation.");
+      setIsSaving(false);
+      setSaveError("Please sign in to save your simulation.");
       return;
     }
 
-    // 2) Insert into saved_simulations
-    const { data, error } = await supabase
-      .from("saved_simulations")
-      .insert({
-        user_id: user.id,
+    // Insert the simulation into the saved_simulations table
+    const { error } = await supabase.from("saved_simulations").insert({
+      user_id: user.id,
 
-        finance_type: finalLoan.financeType,
-        cash_price: finalLoan.principal, // note: currently using financed amount (principal)
-        deposit: 0,                      // you can pass real deposit later
-        apr: finalLoan.annualRate * 100,
-        term_months: finalLoan.termMonthsRemaining,
-        balloon: finalLoan.financeType === "pcp" ? finalLoan.balloon : null,
+      finance_type: finalLoan.financeType,
+      cash_price: finalLoan.principal,
+      deposit: 0,
+      apr: finalLoan.annualRate * 100,
+      term_months: finalLoan.termMonthsRemaining,
+      balloon: finalLoan.financeType === "pcp" ? finalLoan.balloon : null,
 
-        final_monthly_payment: finalLoan.monthlyPayment,
-        total_interest: finalLoan.totalInterestOnFinance,
-        months_remaining: finalLoan.termMonthsRemaining,
+      final_monthly_payment: finalLoan.monthlyPayment,
+      total_interest: finalLoan.totalInterestOnFinance,
+      months_remaining: finalLoan.termMonthsRemaining,
 
-        decisions: decisions, // jsonb accepts arrays
-      })
-      .select(); // returns inserted row(s)
+      decisions: decisions,
+    });
 
-    console.log("SAVE: insert data =", data);
-    console.log("SAVE: insert error =", error);
-
+    // Handle database insert failure
     if (error) {
-      alert("Failed to save simulation. Check console for details.");
+      setSaveError("Failed to save simulation. Please try again.");
+      setIsSaving(false);
       return;
     }
 
-    alert("Simulation saved successfully!");
+    // Mark simulation as successfully saved
+    setIsSaving(false);
+    setIsSaved(true);
   }
+
   const summaryCardStyle: React.CSSProperties = {
     backgroundColor: "#f9fafb",
     borderRadius: "10px",
@@ -1296,7 +1308,6 @@ function FinalSummary({
           boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
           padding: "32px 40px",
           fontFamily: "Arial, sans-serif",
-          animation: "fadeIn 0.25s ease",
         }}
       >
         {/* Header */}
@@ -1307,14 +1318,53 @@ function FinalSummary({
             marginBottom: "20px",
           }}
         >
-          <h2 style={{ margin: 0, fontSize: "1.8rem" }}>Simulation Summary</h2>
+          <h2 style={{ margin: 0, fontSize: "1.8rem" }}>
+            Simulation Summary
+          </h2>
           <p style={{ opacity: 0.8, marginTop: "6px" }}>
-            Here's a clear breakdown of how your decisions impacted your finance
-            agreement.
+            Here's a clear breakdown of how your decisions impacted your finance agreement.
           </p>
         </div>
 
-        {/* Summary stats - card row */}
+        {/* Success banner shown after save */}
+        {isSaved && (
+          <div
+            style={{
+              backgroundColor: "#dcfce7",
+              border: "1px solid #22c55e",
+              color: "#166534",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              marginBottom: "16px",
+              fontWeight: 600,
+            }}
+          >
+            ✅ Simulation saved successfully.
+            <div style={{ marginTop: "6px" }}>
+              <Link href="/dashboard/simulations" style={{ textDecoration: "underline" }}>
+                View dashboard
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Error banner if save fails */}
+        {saveError && (
+          <div
+            style={{
+              backgroundColor: "#fee2e2",
+              border: "1px solid #ef4444",
+              color: "#7f1d1d",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              marginBottom: "16px",
+            }}
+          >
+            {saveError}
+          </div>
+        )}
+
+        {/* Summary stats */}
         <div
           style={{
             display: "grid",
@@ -1339,7 +1389,9 @@ function FinalSummary({
 
           <div style={summaryCardStyle}>
             <b>Months remaining</b>
-            <span style={valueStyle}>{finalLoan.termMonthsRemaining}</span>
+            <span style={valueStyle}>
+              {finalLoan.termMonthsRemaining}
+            </span>
           </div>
 
           <div style={summaryCardStyle}>
@@ -1351,64 +1403,51 @@ function FinalSummary({
         </div>
 
         {/* Decisions list */}
-        <h3 style={{ marginTop: "8px" }}>Decisions you made</h3>
-        <ul style={{ lineHeight: 1.6, marginBottom: "28px", paddingLeft: "20px" }}>
+        <h3>Decisions you made</h3>
+        <ul style={{ lineHeight: 1.6, marginBottom: "28px" }}>
           {decisions.map((label, index) => (
-            <li key={index} style={{ marginBottom: "4px" }}>
-              {label}
-            </li>
+            <li key={index}>{label}</li>
           ))}
         </ul>
-        
-        {/* Save button */}
-            <button
-        onClick={handleSaveSimulation}
-        style={{
-          backgroundColor: "#10b981",
-          color: "white",
-          padding: "10px 22px",
-          borderRadius: "8px",
-          border: "none",
-          cursor: "pointer",
-          fontSize: "1rem",
-          transition: "0.2s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.opacity = "0.85";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.opacity = "1";
-        }}
-      >
-        Save simulation
-      </button>
 
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          style={{
-            backgroundColor: "#3b82f6",
-            color: "white",
-            padding: "10px 22px",
-            borderRadius: "8px",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "1rem",
-            transition: "0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = "0.85";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = "1";
-          }}
-        >
-          Close summary
-        </button>
+        {/* Action buttons */}
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button
+            onClick={handleSaveSimulation}
+            disabled={isSaving || isSaved}
+            style={{
+              backgroundColor: isSaved ? "#9ca3af" : "#10b981",
+              color: "white",
+              padding: "10px 22px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: isSaved ? "default" : "pointer",
+              fontSize: "1rem",
+            }}
+          >
+            {isSaving ? "Saving…" : isSaved ? "Saved" : "Save simulation"}
+          </button>
+
+          <button
+            onClick={onClose}
+            style={{
+              backgroundColor: "#3b82f6",
+              color: "white",
+              padding: "10px 22px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "1rem",
+            }}
+          >
+            Close summary
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
 
 //Parent component: holds the current LoanState & scenario id.
 //Pattern inspired by "Game" component in GeeksforGeeks text adventure.
