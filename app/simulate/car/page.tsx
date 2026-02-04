@@ -1134,6 +1134,156 @@ const loanScenarios: ScenarioNode[] = [
     ],
   },
 
+  //Personal: Tax refund received
+  {
+  id: 22,
+  title: "Tax Refund",
+  description:
+    "You receive a €1,500 tax refund after filing your annual return. You can use this money strategically.",
+  choices: [
+    {
+      id: "tax-refund-pay-loan",
+      label: "Use the €1,500 to reduce the finance balance",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          principal: Math.max(loan.principal - 1500, 0),
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Using the refund to reduce your balance lowers interest and improves the overall cost of the finance.",
+    },
+    {
+      id: "tax-refund-save",
+      label: "Keep the refund in savings",
+      apply: (loan) => loan,
+      explanation:
+        "Your loan remains unchanged, but keeping savings improves financial security.",
+    },
+  ],
+},
+
+//Personal: Lower insurance premium
+{
+  id: 23,
+  title: "Lower Insurance Premium",
+  description:
+    "You switch insurance provider and reduce your annual premium by €300, improving your monthly budget.",
+  choices: [
+    {
+      id: "insurance-keep-loan",
+      label: "Keep the loan the same and enjoy extra monthly flexibility",
+      apply: (loan) => loan,
+      explanation:
+        "Lower running costs make repayments more comfortable without changing the loan.",
+    },
+    {
+      id: "insurance-reduce-term",
+      label: "Reduce the loan term by 3 months using the savings",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          termMonthsRemaining: Math.max(loan.termMonthsRemaining - 3, 1),
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Shortening the term helps you clear the finance sooner and reduces total interest.",
+    },
+  ],
+},
+
+//Personal: Trade in consideration
+{
+  id: 24,
+  title: "Trade-In Consideration",
+  description:
+    "A dealer offers a trade-in deal on your car. The value could help reduce your outstanding finance, but may not fully clear it.",
+  choices: [
+    {
+      id: "trade-in-accept",
+      label: "Accept the trade-in and reduce your finance balance by €2,000",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          principal: Math.max(loan.principal - 2000, 0),
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "The trade-in reduces your balance and interest, but you give up the car earlier.",
+    },
+    {
+      id: "trade-in-decline",
+      label: "Decline the trade-in and keep the current agreement",
+      apply: (loan) => loan,
+      explanation:
+        "You avoid changing vehicles, but your finance continues unchanged.",
+    },
+  ],
+},
+
+//Personal: Strong used car market
+{
+  id: 25,
+  title: "Strong Used Car Market",
+  description:
+    "Demand for used cars has increased, and your car is now worth more than expected. This improves your equity position.",
+  choices: [
+    {
+      id: "used-market-reduce-balance",
+      label: "Use the increased value to reduce your finance balance by €2,500",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          principal: Math.max(loan.principal - 2500, 0),
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Higher car value improves your equity position and reduces interest by lowering the balance.",
+    },
+    {
+      id: "used-market-no-change",
+      label: "Do nothing and keep the current agreement",
+      apply: (loan) => loan,
+      explanation:
+        "Your loan stays unchanged, but you retain flexibility in case you sell or trade in later.",
+    },
+  ],
+},
+
+//Personal: Cost of living reduction
+{
+  id: 26,
+  title: "Cost of Living Reduction",
+  description:
+    "Your rent decreases or household bills fall, leaving you with an extra €120 per month in disposable income.",
+  choices: [
+    {
+      id: "living-costs-overpay",
+      label: "Use the extra money to overpay the loan each month",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          principal: Math.max(loan.principal - 1200, 0), // simulates regular overpayments
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Regular overpayments reduce interest and help clear the loan faster.",
+    },
+    {
+      id: "living-costs-save",
+      label: "Keep the extra money for savings and emergencies",
+      apply: (loan) => loan,
+      explanation:
+        "Your loan remains unchanged, but improved savings increase financial security.",
+    },
+  ],
+},
+
 ];
 
 //Child component: responsible only for rendering only one scenario at a time
