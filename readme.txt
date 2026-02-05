@@ -111,9 +111,63 @@ Prompt examples:
   https://www.geeksforgeeks.org/javascript/design-a-responsive-sliding-login-registration-form-using-html-css-javascript/
   (Accessed: January 2026)
 
+  - GeeksforGeeks. (2025) "How to Shuffle an Array Using JavaScript"
+    https://chatgpt.com/g/g-p-68bb37e4580c81919856c3fb53eda9c3-mcq/c/6963bd40-b328-832f-9cac-db30e65b126d
+    (Accessed: January 2026)
+
 - ChatGPT (OpenAI). (2026)
 Prompt examples:
 1. “How can I randomise a list of simulation scenarios in React while ensuring only a fixed number are used per run?”
 2. “Help me integrate Supabase authentication (login and register) into a Next.js application.”
 3. “Help me adapt this GeeksforGeeks sliding login/register UI to work with React state instead of vanilla JavaScript."
 4. “Why am I getting a ‘default export is not a React component’ error in Next.js, and how do I fix it?”
+
+
+---Iteration 4---
+45% of code written by me
+30% Referenced sources (Supabase, W3Schools, GeeksforGeeks, React.dev)
+25% AI (ChatGPT) assisted
+
+- Supabase. (2025). “Insert Data.”
+  https://supabase.com/docs/reference/javascript/insert
+  (Accessed: January 2026)
+
+- Supabase. (2025). “Select Data.”
+  https://supabase.com/docs/reference/javascript/select
+  (Accessed: January 2026)
+
+- Supabase. (2025). “Row Level Security (RLS).”
+  https://supabase.com/docs/guides/database/postgres/row-level-security
+  (Accessed: January 2026)
+
+- Supabase. (2025). “Authentication – getUser().”
+  https://supabase.com/docs/reference/javascript/auth-getuser
+  (Accessed: January 2026)
+
+- BlackSlate. (2024). “Build a CRUD React App with Supabase.”
+  https://www.blackslate.io/articles/build-curd-react-app-with-supabase
+  (Accessed: January 2026)
+
+- W3Schools. (2025). “CSS Cards.”
+  https://www.w3schools.com/howto/howto_css_cards.asp
+  (Accessed: January 2026)
+
+- W3Schools. (2025). “CSS Modals.”
+  https://www.w3schools.com/howto/howto_css_modals.asp
+  (Accessed: January 2026)
+
+- W3Schools. (2025). “CSS Buttons.”
+  https://www.w3schools.com/css/css3_buttons.asp
+  (Accessed: January 2026)
+
+- React.dev. (2025). “State: A Component’s Memory.”
+  https://react.dev/learn/state-a-components-memory
+  (Accessed: January 2026)
+
+- React.dev. (2025). “Conditional Rendering.”
+  https://react.dev/learn/conditional-rendering
+  (Accessed: January 2026)
+
+- W3Schools. (2025). "Tabs."
+  https://www.w3schools.am/howto/howto_js_tabs.html#gsc.tab=0 (tabs)
+  (Accessed: January 2026)
