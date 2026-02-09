@@ -171,3 +171,11 @@ Prompt examples:
 - W3Schools. (2025). "Tabs."
   https://www.w3schools.am/howto/howto_js_tabs.html#gsc.tab=0 (tabs)
   (Accessed: January 2026)
+
+- ChatGPT (OpenAI). (2026)
+Prompt examples:
+1. “Can you help me design a Supabase table schema for storing saved loan simulations?”
+2. “Can you adapt a Supabase CRUD dashboard example to display a user’s saved simulations?”
+3. “How can I save a completed simulation to Supabase only when a user is signed in?”
+4. “Why is my Supabase insert not appearing in the table and how can I debug it?”
+5. “How can I implement preset car finance options while still allowing users to edit the values?”

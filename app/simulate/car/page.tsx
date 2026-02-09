@@ -2,7 +2,7 @@
 //React structure and hook usage (useState, useMemo) based on React.dev official documentation
 //https://react.dev/learn
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Navbar from "../../components/navbar";
 import {supabase} from "../../../lib/supabaseClient";
 
@@ -97,7 +97,7 @@ const financePresets: FinancePreset[] = [
     termMonths: 60,
   },
 
-  //Graduate / premium (PCP)
+  //Mid range / popular (PCP)
   {
     id: "audi-a3-pcp",
     label: "Audi A3 (PCP)",
@@ -1360,37 +1360,37 @@ function FinalSummary({
   decisions: string[];
   onClose: () => void;
 }) {
-  // Tracks whether the save request is currently in progress
+  //Tracks whether the save request is currently in progress
   const [isSaving, setIsSaving] = useState(false);
 
-  // Tracks whether the simulation has been successfully saved
+  //Tracks whether the simulation has been successfully saved
   const [isSaved, setIsSaved] = useState(false);
 
-  // Stores any save-related error message
+  //Stores any save-related error message
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Handles saving the simulation for signed-in users only
+  //Handles saving the simulation for signed-in users only
   async function handleSaveSimulation() {
-    // Prevent duplicate saves
+    //Prevent duplicate saves
     if (isSaving || isSaved) return;
 
     setIsSaving(true);
     setSaveError(null);
 
-    // Retrieve the currently authenticated user from Supabase
+    //Retrieve the currently authenticated user from Supabase
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
-    // If no user is signed in, block saving
+    //If no user is signed in, block saving
     if (authError || !user) {
       setIsSaving(false);
       setSaveError("Please sign in to save your simulation.");
       return;
     }
 
-    // Insert the simulation into the saved_simulations table
+    //Insert the simulation into the saved_simulations table
     const { error } = await supabase.from("saved_simulations").insert({
       user_id: user.id,
 
@@ -1673,7 +1673,7 @@ if (outstanding <= 0) {
   }
 }
 
-
+  //Resets all state to initial values to allow restarting the simulation 
   function handleRestart() {
     setLoan(initialLoan);
     setScenarioIndex(0);
@@ -1967,20 +1967,28 @@ if (outstanding <= 0) {
             )}
           </div>
         )}
+          
+            {explanation && (
+      <div
+        style={{
+          maxWidth: "720px",
+          margin: "16px auto 0",
+          padding: "12px 16px",
+          backgroundColor: "#f0f9ff",
+          borderLeft: "4px solid #3b82f6",
+          borderRadius: "8px",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div style={{ fontWeight: 600, marginBottom: "4px" }}>
+          💡 What this means
+        </div>
+        <p style={{ margin: 0, lineHeight: 1.5 }}>
+          {explanation}
+        </p>
+      </div>
+    )}
 
-        {explanation && (
-          <p
-            className="small mt-3"
-            style={{
-              maxWidth: "720px",
-              margin: "0 auto",
-              opacity: 0.9,
-              lineHeight: 1.5,
-            }}
-          >
-            <b>What this means:</b> {explanation}
-          </p>
-        )}
 
         <div
           style={{
@@ -2039,6 +2047,18 @@ export default function CarFinanceSimulatorPage() {
     //Recalculate when any input changes
   }, [cashPrice, deposit, fees, aprPct, termMonths, financeType, balloon]);
 
+  //ref used to scroll to the Custom details section (must be top-level in the component, not inside a function)
+const customSectionRef = useRef<HTMLDivElement | null>(null);
+
+//handler for the "Edit preset details" button
+function handleEditPresetDetails() {
+  setInputTab("custom");
+
+  // Wait for the Custom tab to render, then scroll to it
+  setTimeout(() => {
+    customSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 0);
+}
   //Start the simulator with the current inputs
  function handleBeginSimulator() {
   if (!result || error) return;
@@ -2054,7 +2074,7 @@ export default function CarFinanceSimulatorPage() {
   setMode("simulate");
 }
 
-// Applies a selected preset to the calculator inputs
+//Applies a selected preset to the calculator inputs
 function applyPreset(preset: FinancePreset) {
   setFinanceType(preset.financeType);
   setCashPrice(preset.cashPrice);
@@ -2140,30 +2160,67 @@ function applyPreset(preset: FinancePreset) {
               }}
             >
                   {/* Preset details */}
-                      {selectedPresetId && (
-          <div
-            style={{
-              marginTop: "12px",
-              padding: "12px 14px",
-              border: "1px solid #e5e7eb",
-              borderRadius: "10px",
-              backgroundColor: "#f9fafb",
-            }}
-          >
-            <div style={{ fontWeight: 600, marginBottom: "8px" }}>Preset details</div>
+{selectedPresetId && (
+  <div
+    style={{
+      marginTop: "12px",
+      padding: "12px 14px",
+      border: "1px solid #e5e7eb",
+      borderRadius: "10px",
+      backgroundColor: "#f9fafb",
+    }}
+  >
+    <div style={{ fontWeight: 600, marginBottom: "8px" }}>
+      Preset details
+    </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "8px" }}>
-              <div><b>Cash price:</b> €{cashPrice.toLocaleString()}</div>
-              <div><b>Deposit:</b> €{deposit.toLocaleString()}</div>
-              <div><b>APR:</b> {aprPct}%</div>
-              <div><b>Term:</b> {termMonths} months</div>
+    {/* Preset summary values */}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+        gap: "8px",
+      }}
+    >
+      <div><b>Cash price:</b> €{cashPrice.toLocaleString()}</div>
+      <div><b>Deposit:</b> €{deposit.toLocaleString()}</div>
+      <div><b>APR:</b> {aprPct}%</div>
+      <div><b>Term:</b> {termMonths} months</div>
 
-              {financeType === "pcp" && (
-                <div><b>Balloon/GMFV:</b> €{balloon.toLocaleString()}</div>
-              )}
-            </div>
-          </div>
-        )}
+      {financeType === "pcp" && (
+        <div><b>Balloon / GMFV:</b> €{balloon.toLocaleString()}</div>
+      )}
+    </div>
+
+    {/* Clear edit CTA */}
+    <div
+      style={{
+        marginTop: "12px",
+        display: "flex",
+        gap: "10px",
+        alignItems: "center",
+      }}
+    >
+      <button
+        type="button"
+        className="btn btn-outline-primary"
+        onClick={handleEditPresetDetails}
+        style={{
+          borderRadius: "10px",
+          padding: "10px 14px",
+          fontWeight: 600,
+        }}
+      >
+        ✏️ Edit preset details
+      </button>
+
+      <span style={{ fontSize: "0.9rem", opacity: 0.8 }}>
+        Opens <b>Custom details</b>
+      </span>
+    </div>
+  </div>
+)}
+
 
               <label className="label">
                 <span className="tooltip">
@@ -2263,7 +2320,7 @@ function applyPreset(preset: FinancePreset) {
           >
             {/*Inputs*/}
             {inputTab === "custom" && (
-            <div className="grid-2 mt-20">
+            <div ref={customSectionRef} className="grid-2 mt-20">
               <div className="grid-gap-10">
                 {/*Finance Type*/}
                 <label className="label">
