@@ -1355,10 +1355,12 @@ function FinalSummary({
   finalLoan,
   decisions,
   onClose,
+  carName,
 }: {
   finalLoan: LoanState;
   decisions: string[];
   onClose: () => void;
+  carName: string;
 }) {
   //Tracks whether the save request is currently in progress
   const [isSaving, setIsSaving] = useState(false);
@@ -1393,7 +1395,7 @@ function FinalSummary({
     //Insert the simulation into the saved_simulations table
     const { error } = await supabase.from("saved_simulations").insert({
       user_id: user.id,
-
+      carName: carName || null, 
       finance_type: finalLoan.financeType,
       cash_price: finalLoan.principal,
       deposit: 0,
@@ -1523,6 +1525,11 @@ function FinalSummary({
             marginBottom: "22px",
           }}
         >
+          {carName && (
+          <p style={{ marginTop: "6px", opacity: 0.85 }}>
+            <b>Car:</b> {carName}
+          </p>
+        )}
           <div style={summaryCardStyle}>
             <b>Final monthly payment</b>
             <span style={valueStyle}>
@@ -1606,10 +1613,12 @@ function LoanSimulation({
   initialLoan,
   scenarios,
   onExit,
+  carName,
 }: {
   initialLoan: LoanState;
   scenarios: ScenarioNode[];
   onExit: () => void;
+  carName: string;
 }) {
 
 
@@ -1963,6 +1972,7 @@ if (outstanding <= 0) {
                 finalLoan={loan}
                 decisions={decisionHistory}
                 onClose={() => setShowSummary(false)}
+                carName={carName}
               />
             )}
           </div>
@@ -2029,6 +2039,7 @@ export default function CarFinanceSimulatorPage() {
   const [showSchedule, setShowSchedule] = useState(false); //hides/shows repayment schedule
   const [inputTab, setInputTab] = useState<"presets" | "custom">("presets");  //which input tab is active
   const [selectedPresetId, setSelectedPresetId] = useState<string>(""); //which preset is selected
+  const [carName, setCarName] = useState<string>(""); //stores the name of the car for display in the simulator
 
 
   //keep a separate string for the term input to avoid getting stuck at 1
@@ -2083,6 +2094,7 @@ function applyPreset(preset: FinancePreset) {
   setAprPct(preset.aprPct);
   setTermMonths(preset.termMonths);
   setTermStr(String(preset.termMonths)); // keep term input in sync
+  setCarName(preset.label); //store car name for display in simulator
 
   if (preset.financeType === "pcp") {
     setBalloon(preset.balloon ?? 0);
@@ -2342,6 +2354,17 @@ function applyPreset(preset: FinancePreset) {
                 </label>
 
                 {/*Where user edits inputs */}
+                {/* Car name input */}
+                <label className="label">
+              Car name (optional)
+              <input
+                className="input"
+                type="text"
+                value={carName}
+                onChange={(e) => setCarName(e.target.value)}
+                placeholder="e.g. 2019 VW Golf"
+              />
+            </label>
                 {/*Car Price Input*/}
                 <label className="label">
                   <span className="tooltip">
@@ -2363,6 +2386,8 @@ function applyPreset(preset: FinancePreset) {
                   />
 
                 </label>
+
+
 
                 {/*Deposit Input*/}
                 <label className="label">
@@ -2593,6 +2618,7 @@ function applyPreset(preset: FinancePreset) {
             setMode("setup");
             setSimLoan(null);
           }}
+          carName={carName}
         />
       )}
     </>
