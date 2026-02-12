@@ -1,19 +1,20 @@
 //Dashboard page for managing saved simulations
 //CRUD (Create, Read, Update, Delete) structure inspired by:
 //Blackslate – "Build CRUD React App with Supabase" - https://www.blackslate.io/articles/build-curd-react-app-with-supabase
-// ChatGPT was used as a development aid to: Adapt generic CRUD patterns to the saved_simulations schema, assist with React state management and UI logic and to help integrate Supabase Auth with Row Level Security (RLS)
+//ChatGPT was used as a development aid to: Adapt generic CRUD patterns to the saved simulations schema, assist with React state management and UI logic and to help integrate Supabase Auth with Row Level Security (RLS)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "../../components/navbar";
-import {supabase} from "../../../lib/supabaseClient";
+import { supabase } from "../../../lib/supabaseClient";
+import Link from "next/link";
 
 type SavedSimulationRow = {
   id: string;
   user_id: string;
   created_at: string;
 
-  //New column you should add:
+  //user defined name for simulation
   name: string | null;
 
   finance_type: "loan" | "pcp";
@@ -27,9 +28,10 @@ type SavedSimulationRow = {
   total_interest: number;
   months_remaining: number;
 
-  decisions: unknown; 
+  decisions: unknown;
 };
 
+//Dashboard page component
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
@@ -37,10 +39,10 @@ export default function DashboardPage() {
   const [rows, setRows] = useState<SavedSimulationRow[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // UI state
+  //UI state
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Inline edit state (rename)
+  //Inline edit state (rename)
   const [editingId, setEditingId] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState("");
 
@@ -66,14 +68,14 @@ export default function DashboardPage() {
 
       if (authError) {
         setLoading(false);
-        setAuthMessage("Auth error. Check console.");
+        setAuthMessage("We couldn’t check your login status. Please refresh and try again.");
         console.error(authError);
         return;
       }
 
       if (!user) {
         setLoading(false);
-        setAuthMessage("Please sign in to view your dashboard.");
+        setAuthMessage("Please sign in to view your dashboard and save simulations.");
         return;
       }
 
@@ -147,10 +149,7 @@ export default function DashboardPage() {
     }
 
     //update in Supabase
-    const { error } = await supabase
-      .from("saved_simulations")
-      .update({ name: trimmed })
-      .eq("id", id);
+    const { error } = await supabase.from("saved_simulations").update({ name: trimmed }).eq("id", id);
 
     if (error) {
       setErrorMsg("Failed to rename. Check console.");
@@ -158,12 +157,12 @@ export default function DashboardPage() {
       return;
     }
 
-    // pdate local state
+    //update locally
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, name: trimmed } : r)));
     cancelRename();
   }
 
-  //Delete 
+  //Delete
   async function deleteSimulation(id: string) {
     setErrorMsg(null);
 
@@ -205,9 +204,7 @@ export default function DashboardPage() {
 
       <div style={{ maxWidth: "1000px", margin: "90px auto 50px", padding: "0 16px" }}>
         <h1 style={{ marginBottom: "6px" }}>Your Dashboard</h1>
-        <p style={{ opacity: 0.8, marginTop: 0 }}>
-          View, rename, and delete your saved simulations.
-        </p>
+        <p style={{ opacity: 0.8, marginTop: 0 }}>View, rename, and delete your saved simulations.</p>
 
         {loading && (
           <div style={{ padding: "14px", border: "1px solid #e5e7eb", borderRadius: "10px" }}>
@@ -215,16 +212,55 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Login button when not signed in */}
         {!loading && authMessage && (
           <div
             style={{
-              padding: "14px",
+              padding: "16px",
               border: "1px solid #f59e0b",
               background: "#fffbeb",
-              borderRadius: "10px",
+              borderRadius: "12px",
             }}
           >
-            {authMessage}
+            <div style={{ fontWeight: 700, marginBottom: "6px" }}>You’re not signed in</div>
+            <div style={{ opacity: 0.85, marginBottom: "12px" }}>{authMessage}</div>
+
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <Link
+                href="/auth"
+                style={{
+                  display: "inline-block",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  background: "#3b82f6",
+                  color: "white",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                }}
+              >
+                Log in
+              </Link>
+
+              <Link
+                href="/auth"
+                style={{
+                  display: "inline-block",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  border: "1px solid #d1d5db",
+                  background: "white",
+                  color: "#111827",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                }}
+              >
+                Create account
+              </Link>
+            </div>
+
+            <div style={{ marginTop: "10px", fontSize: "0.9rem", opacity: 0.8 }}>
+              Once you’re signed in, your saved simulations will appear here.
+            </div>
           </div>
         )}
 
@@ -256,9 +292,7 @@ export default function DashboardPage() {
                   border: "1px solid #d1d5db",
                 }}
               />
-              <div style={{ fontSize: "0.9rem", opacity: 0.75 }}>
-                {filteredRows.length} saved
-              </div>
+              <div style={{ fontSize: "0.9rem", opacity: 0.75 }}>{filteredRows.length} saved</div>
             </div>
 
             {filteredRows.length === 0 ? (
@@ -287,9 +321,7 @@ export default function DashboardPage() {
                         <div style={{ flex: 1 }}>
                           {!isEditing ? (
                             <>
-                              <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>
-                                {r.name ?? fallbackName(r)}
-                              </div>
+                              <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>{r.name ?? fallbackName(r)}</div>
                               <div style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "2px" }}>
                                 {new Date(r.created_at).toLocaleString()} • {r.finance_type.toUpperCase()}
                               </div>
