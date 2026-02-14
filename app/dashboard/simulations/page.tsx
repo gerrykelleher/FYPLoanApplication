@@ -4,6 +4,7 @@
 //ChatGPT was used as a development aid to: Adapt generic CRUD patterns to the saved simulations schema, assist with React state management and UI logic and to help integrate Supabase Auth with Row Level Security (RLS)
 "use client";
 
+
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "../../components/navbar";
 import { supabase } from "../../../lib/supabaseClient";
@@ -58,7 +59,8 @@ export default function DashboardPage() {
       setErrorMsg(null);
       setAuthMessage(null);
 
-      //1. Auth check (Supabase Auth getUser)
+      //US-16 - Simple dashboard for saved simulations
+      //1. Auth check (Supabase Auth getUser), must be logged in to save
       const {
         data: { user },
         error: authError,
@@ -79,6 +81,7 @@ export default function DashboardPage() {
         return;
       }
 
+      //US-16 - Simple dashboard for saved simulations
       //2. Select this user's saved simulations (RLS also enforces this on the server)
       const { data, error } = await supabase
         .from("saved_simulations")
@@ -372,6 +375,7 @@ export default function DashboardPage() {
                         {/* Actions */}
                         {!isEditing && (
                           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            {/*US-16 - Simple dashboard for saved simulations*/}
                             <button
                               onClick={() => setExpandedId(isExpanded ? null : r.id)}
                               style={{
@@ -448,6 +452,7 @@ export default function DashboardPage() {
                             {r.finance_type === "pcp" ? `€${Number(r.balloon ?? 0).toFixed(2)}` : "N/A"}
                           </div>
                           <div>
+                            {/*US-16 - Simple dashboard for saved simulations*/}
                             <b>Final monthly payment:</b> €{Number(r.final_monthly_payment).toFixed(2)}
                           </div>
                           <div>
