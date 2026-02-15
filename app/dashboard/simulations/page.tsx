@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import Navbar from "../../components/navbar";
 import { supabase } from "../../../lib/supabaseClient";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type SavedSimulationRow = {
   id: string;
@@ -34,6 +35,8 @@ type SavedSimulationRow = {
 
 //Dashboard page component
 export default function DashboardPage() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
 
@@ -49,6 +52,11 @@ export default function DashboardPage() {
 
   //Optional search
   const [search, setSearch] = useState("");
+
+  //Compare selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [compareMsg, setCompareMsg] = useState<string | null>(null);
+  const MAX_COMPARE = 4;
 
   //Fetch user + their saved simulations
   useEffect(() => {
@@ -109,6 +117,28 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, []);
+
+  //Keep compare selections valid if rows change (e.g., deleted)
+  useEffect(() => {
+    setSelectedIds((prev) => prev.filter((id) => rows.some((r) => r.id === id)));
+  }, [rows]);
+
+  function toggleSelected(id: string) {
+    setCompareMsg(null);
+
+    setSelectedIds((prev) => {
+      const already = prev.includes(id);
+
+      if (already) return prev.filter((x) => x !== id);
+
+      if (prev.length >= MAX_COMPARE) {
+        setCompareMsg(`You can compare up to ${MAX_COMPARE} simulations.`);
+        return prev;
+      }
+
+      return [...prev, id];
+    });
+  }
 
   //Filtered rows based on search
   const filteredRows = useMemo(() => {
@@ -298,6 +328,59 @@ export default function DashboardPage() {
               <div style={{ fontSize: "0.9rem", opacity: 0.75 }}>{filteredRows.length} saved</div>
             </div>
 
+            {/* Compare controls */}
+            <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "12px", flexWrap: "wrap" }}>
+              <button
+                onClick={() => router.push(`/compare?ids=${selectedIds.join(",")}`)}
+                disabled={selectedIds.length < 2}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: "none",
+                  cursor: selectedIds.length < 2 ? "not-allowed" : "pointer",
+                  background: selectedIds.length < 2 ? "#9ca3af" : "#111827",
+                  color: "white",
+                  fontWeight: 700,
+                }}
+              >
+                Compare ({selectedIds.length})
+              </button>
+
+              <button
+                onClick={() => {
+                  setSelectedIds([]);
+                  setCompareMsg(null);
+                }}
+                disabled={selectedIds.length === 0}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: "1px solid #d1d5db",
+                  cursor: selectedIds.length === 0 ? "not-allowed" : "pointer",
+                  background: "white",
+                  fontWeight: 700,
+                }}
+              >
+                Clear
+              </button>
+
+              <div style={{ fontSize: "0.9rem", opacity: 0.75 }}>Select 2–{MAX_COMPARE} simulations to compare.</div>
+            </div>
+
+            {compareMsg && (
+              <div
+                style={{
+                  padding: "12px",
+                  border: "1px solid #f59e0b",
+                  background: "#fffbeb",
+                  borderRadius: "10px",
+                  marginBottom: "12px",
+                }}
+              >
+                {compareMsg}
+              </div>
+            )}
+
             {filteredRows.length === 0 ? (
               <div style={{ padding: "14px", border: "1px solid #e5e7eb", borderRadius: "10px" }}>
                 No saved simulations found.
@@ -320,7 +403,20 @@ export default function DashboardPage() {
                       }}
                     >
                       {/* Top row */}
-                      <div style={{ display: "flex", gap: "12px", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", gap: "12px", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        {/* Compare checkbox */}
+                        {!isEditing && (
+                          <div style={{ paddingTop: "4px" }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(r.id)}
+                              onChange={() => toggleSelected(r.id)}
+                              aria-label="Select for comparison"
+                              style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                            />
+                          </div>
+                        )}
+
                         <div style={{ flex: 1 }}>
                           {!isEditing ? (
                             <>

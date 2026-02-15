@@ -179,3 +179,8 @@ Prompt examples:
 3. “How can I save a completed simulation to Supabase only when a user is signed in?”
 4. “Why is my Supabase insert not appearing in the table and how can I debug it?”
 5. “How can I implement preset car finance options while still allowing users to edit the values?”
+
+---Iteration 5---
+Next.js Documentation – "useSearchParams" (App Router) - https://nextjs.org/docs/app/api-reference/functions/use-search-params
+Next.js Documentation – "useRouter" (App Router) - https://nextjs.org/docs/app/api-reference/functions/use-router
+Supabase. (2026). “Using Filters.” - https://supabase.com/docs/reference/javascript/using-filters
