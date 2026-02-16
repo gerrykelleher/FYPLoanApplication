@@ -13,7 +13,7 @@ import "./auth.css";
 import Navbar from "../components/navbar";
 import { supabase } from "@/lib/supabaseClient";  //authentication client
 
-
+//US-11 - Account creation / log in
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");  //mode toggle (login/register)
   const [email, setEmail] = useState("");
@@ -90,6 +90,16 @@ export default function AuthPage() {
                   mode === "login" ? "current-password" : "new-password"
                 }
               />
+
+              {/* Forgot password link */}
+              <div style={{ width: "100%", textAlign: "right", marginTop: "6px" }}>
+                <a
+                  href="/auth/forgot"
+                  style={{ fontSize: "0.9rem", opacity: 0.85, textDecoration: "underline" }}
+                >
+                  Forgot password?
+                </a>
+              </div>
 
               <button type="submit" disabled={loading}>
                 {loading ? "Please wait..." : "Login"}

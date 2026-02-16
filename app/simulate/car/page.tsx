@@ -30,6 +30,7 @@ type Result = {
   rows: Row[];  //repayment schedule rows (first 12 months)
 };
 
+//US-14 - User can choose a preset (type of car) with preset finance details
 //preset finance options for user to choose from
 type FinancePreset = {
   id: string;
@@ -43,6 +44,7 @@ type FinancePreset = {
   balloon?: number; // PCP only
 };
 
+//US-14 - User can choose a preset (type of car) with preset finance details
 //preset car finance options
 const financePresets: FinancePreset[] = [
   //Student / budget (Loan)
@@ -258,6 +260,7 @@ type ScenarioNode = {
   choices: ScenarioChoice[];
 };
 
+//US-10 - Simulation scenarios are randomised and selected from a large pool of possible scenarios
 //Array shuffling logic adapted from GeeksforGeeks:
 //"How to Shuffle an Array Using JavaScript" https://www.geeksforgeeks.org/javascript/how-to-shuffle-an-array-using-javascript/
 function shuffleArray<T>(array: T[]): T[] {
@@ -293,6 +296,7 @@ function pmtWithBalloon(P: number, FV: number, r: number, n: number) {
   return ((P - (FV / a)) * r) / (1 - (1 / a));
 }
 
+//US-02 - 12 month payment amount tracker
 //Builds the repayment schedule (amortisation table) showing how the loan is paid off.
 //Each row includes: payment number, interest, principal, and remaining balance.
 //Created with ChatGPT guidance and verified using the Corporate Finance Institute
@@ -321,6 +325,8 @@ function calculate(inputs: Inputs): Result {
   //inputs broken into seperate variables
   const { cashPrice, deposit, fees, aprPct, termMonths, financeType, balloon } = inputs;
 
+  //US-02 - 12 month payment amount tracker
+  //US-03 - Input Validation
   //input validation
   if (cashPrice <= 0) throw new Error("Cash price must be > 0");
   if (deposit < 0 || fees < 0) throw new Error("Deposit/fees cannot be negative");
@@ -351,6 +357,7 @@ function calculate(inputs: Inputs): Result {
   //totalCostOfCredit = totalAmountRepayable - cashPrice
   const totalCostOfCredit = round2(totalAmountRepayable - cashPrice);
 
+  //US-02 - 12 month payment amount tracker
   //5. Repayment schedule rows (first 12 months)
   const rows = buildAmortizationRows(amountFinanced, r, termMonths, PMT);
 
@@ -365,6 +372,7 @@ function calculate(inputs: Inputs): Result {
   };
 }
 
+//US-06 - Scenarios built into simulator
 //Simulation logic functions
 //Recalculates monthly payment and interest
 //This is used whenever a scenario choice changes the loan details.
@@ -407,6 +415,8 @@ function createInitialLoanState(inputs: Inputs, result: Result): LoanState {
   return recalcLoanFromState(base);
 }
 
+//US-06 - Scenarios built into simulator
+//US-07 - User can pick between two decisions in reaction to a scenario
 //Scenarios
 //Each choice updates the LoanState based on user decisions
 const loanScenarios: ScenarioNode[] = [
@@ -1284,6 +1294,224 @@ const loanScenarios: ScenarioNode[] = [
   ],
 },
 
+//Personal: Insurance Renewal Shock
+{
+  id: 27,
+  title: "Insurance Renewal Shock",
+  description:
+    "Your car insurance renewal comes in much higher than expected, adding an extra €55 per month to your costs.",
+  choices: [
+    {
+      id: "insurance-shock-extend-term",
+      label: "Extend the term by 6 months to reduce monthly repayments",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          termMonthsRemaining: loan.termMonthsRemaining + 6,
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Extending the term can reduce monthly repayments, but increases total interest paid over time.",
+    },
+    {
+      id: "insurance-shock-budget",
+      label: "Keep the loan the same and cut spending elsewhere",
+      apply: (loan) => loan,
+      explanation:
+        "Your finance stays unchanged, which can be cheaper long-term, but your monthly budget becomes tighter.",
+    },
+  ],
+},
+
+//Personal: Unexpected Medical Expense
+{
+  id: 28,
+  title: "Unexpected Medical Expense",
+  description:
+    "You have an unexpected medical cost of €900 and need to decide how to manage it alongside your car finance.",
+  choices: [
+    {
+      id: "medical-use-savings",
+      label: "Pay the €900 from savings and keep the loan unchanged",
+      apply: (loan) => loan,
+      explanation:
+        "Your finance remains unchanged, but your emergency fund is reduced which may increase future risk.",
+    },
+    {
+      id: "medical-extend-term",
+      label: "Extend the term by 12 months to create breathing room",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          termMonthsRemaining: loan.termMonthsRemaining + 12,
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Lower monthly repayments can help cashflow, but extending the term increases total interest paid.",
+    },
+  ],
+},
+
+//Personal: Pay Rise / New Job
+{
+  id: 29,
+  title: "Pay Rise",
+  description:
+    "You get a pay rise, leaving you with an extra €180 per month after tax. You can use it to improve your finances.",
+  choices: [
+    {
+      id: "payrise-overpay",
+      label: "Use the extra money to overpay the finance each month",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          principal: Math.max(loan.principal - 1800, 0), // simulates several months of overpayments
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Overpaying reduces your principal, which lowers interest and can improve the overall cost of the agreement.",
+    },
+    {
+      id: "payrise-save",
+      label: "Keep the extra money for savings and emergencies",
+      apply: (loan) => loan,
+      explanation:
+        "Your finance remains unchanged, but extra savings improve resilience against future shocks.",
+    },
+  ],
+},
+
+//Personal: Household Bills Increase
+{
+  id: 30,
+  title: "Household Bills Increase",
+  description:
+    "Your household bills rise due to energy price increases, adding €70 per month to your expenses.",
+  choices: [
+    {
+      id: "bills-increase-extend-6",
+      label: "Extend the term by 6 months to reduce monthly repayments",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          termMonthsRemaining: loan.termMonthsRemaining + 6,
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Extending the term can reduce monthly repayments, but increases total interest because you borrow for longer.",
+    },
+    {
+      id: "bills-increase-nochange",
+      label: "Keep the finance the same and adjust your budget elsewhere",
+      apply: (loan) => loan,
+      explanation:
+        "Your repayments stay the same, which can reduce interest long-term, but you’ll need to cut other spending.",
+    },
+  ],
+},
+
+//Personal: Car Tax / NCT / Service Due
+{
+  id: 31,
+  title: "Car Running Costs Due",
+  description:
+    "Your NCT, car tax, and servicing are due around the same time, costing €650 in one month.",
+  choices: [
+    {
+      id: "running-costs-pay-savings",
+      label: "Pay the €650 from savings and keep the loan unchanged",
+      apply: (loan) => loan,
+      explanation:
+        "Your finance stays unchanged, but you reduce savings. This avoids adding extra borrowing costs.",
+    },
+    {
+      id: "running-costs-add-balance",
+      label: "Add the €650 to your finance balance to spread the cost",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          principal: loan.principal + 650,
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Spreading the cost helps short-term cashflow, but increases interest because your balance is higher.",
+    },
+  ],
+},
+
+//Market: Used Car Value Drop (Negative Equity Risk)
+{
+  id: 32,
+  title: "Used Car Value Drops",
+  description:
+    "Used car prices fall and your car is now worth less than expected. You’re worried about negative equity if you needed to sell.",
+  choices: [
+    {
+      id: "value-drop-increase-payments",
+      label: "Increase repayments by reducing the term by 6 months to clear the balance faster",
+      apply: (loan) => {
+        const updated: LoanState = {
+          ...loan,
+          termMonthsRemaining: Math.max(loan.termMonthsRemaining - 6, 1),
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Clearing the finance sooner reduces time spent in negative equity, but increases monthly repayments.",
+    },
+    {
+      id: "value-drop-keep-term",
+      label: "Keep the current schedule and avoid making changes",
+      apply: (loan) => loan,
+      explanation:
+        "Your repayments stay more affordable, but you may remain in negative equity for longer if values stay low.",
+    },
+  ],
+},
+
+//PCP Specific: End-of-Term Decision (Keep / Hand Back)
+{
+  id: 33,
+  title: "PCP End-of-Term Choice",
+  description:
+    "Your PCP term is coming to an end soon. You need to decide how you want to handle the balloon payment (GMFV).",
+  choices: [
+    {
+      id: "pcp-end-pay-balloon",
+      label: "Plan to pay the balloon (reduce savings now to prepare)",
+      apply: (loan) => {
+        if (loan.financeType !== "pcp") return loan;
+        const updated: LoanState = {
+          ...loan,
+          balloon: Math.max(loan.balloon - 1000, 0), // simulates saving/planning towards the balloon
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Preparing for the balloon reduces end-of-term stress, but ties up money that could be used elsewhere.",
+    },
+    {
+      id: "pcp-end-hand-back",
+      label: "Plan to hand the car back and avoid the balloon payment",
+      apply: (loan) => {
+        if (loan.financeType !== "pcp") return loan;
+        const updated: LoanState = {
+          ...loan,
+          balloon: 0, // simulated decision to not keep the car
+        };
+        return recalcLoanFromState(updated);
+      },
+      explanation:
+        "Avoiding the balloon reduces end-of-term cost, but you won’t own the car and may need another vehicle arrangement.",
+    },
+  ],
+},
+
 ];
 
 //Child component: responsible only for rendering only one scenario at a time
@@ -1323,8 +1551,11 @@ function LoanScenarioView({
           {scenario.description}
         </p>
 
+        {/*US-07 - User can pick between two decisions in reaction to a scenario
         {/* Buttons styled as a vertical choice list – pattern adapted from W3Schools button groups */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+
+         
           {scenario.choices.map((choice) => (
             <button
               key={choice.id}
@@ -1351,6 +1582,7 @@ function LoanScenarioView({
 // Final summary card adapted from W3Schools "How To - CSS Modals" and "How To - CSS Cards"
 import Link from "next/link";
 
+//US-09 - A “simulation complete” details page with information on how the user ended up after they made their decisions
 function FinalSummary({
   finalLoan,
   decisions,
@@ -1379,6 +1611,7 @@ function FinalSummary({
     setIsSaving(true);
     setSaveError(null);
 
+    //US-15 - User can save, rename, organise, delete completed simulations
     //Retrieve the currently authenticated user from Supabase
     const {
       data: { user },
@@ -1392,10 +1625,11 @@ function FinalSummary({
       return;
     }
 
+    //US-15 - User can save, rename, organise, delete completed simulations
     //Insert the simulation into the saved_simulations table
     const { error } = await supabase.from("saved_simulations").insert({
       user_id: user.id,
-      carName: carName || null, 
+      car_name: carName || null, 
       finance_type: finalLoan.financeType,
       cash_price: finalLoan.principal,
       deposit: 0,
@@ -1417,6 +1651,7 @@ function FinalSummary({
       return;
     }
 
+    //US-15 - User can save, rename, organise, delete completed simulations
     // Mark simulation as successfully saved
     setIsSaving(false);
     setIsSaved(true);
@@ -1640,14 +1875,20 @@ function LoanSimulation({
 
 
 
+  //US-06 - Scenarios built into simulator
+  //US-07 - User can pick between two decisions in reaction to a scenario
   function handleChoice(choice: ScenarioChoice) {
+  //US-08 - A before and after of loan details from a user’s decision
   //stores current loan for before/after comparison
   setPreviousLoan(loan);
 
+  //US-09 - A “simulation complete” details page with information on how the user ended up after they made their decisions
   //record the label of the decision
   setDecisionHistory((prev) => [...prev, choice.label]);
 
-  const updatedLoan = choice.apply(loan);
+  //US-08 - A before and after of loan details from a user’s decision
+  //Apply user choice
+  const updatedLoan = choice.apply(loan); 
   setLoan(updatedLoan);
   setExplanation(choice.explanation);
 
@@ -1658,6 +1899,7 @@ const outstanding =
 
 if (outstanding <= 0) {
   setEndMessage("Simulation ended early: your finance balance reached €0.");
+  //US-09 - A “simulation complete” details page with information on how the user ended up after they made their decisions
   setShowSummary(true);
   setScenarioIndex(scenarios.length); // forces scenario to null
   return;
@@ -1682,6 +1924,7 @@ if (outstanding <= 0) {
   }
 }
 
+  //US-10 - Simulation scenarios are randomised and selected from a large pool of possible scenarios
   //Resets all state to initial values to allow restarting the simulation 
   function handleRestart() {
     setLoan(initialLoan);
@@ -1693,6 +1936,7 @@ if (outstanding <= 0) {
     setEndMessage(null);
   }
 
+  //US-08 - A before and after of loan details from a user’s decision
   //helper to render change arrows/colour
   function renderChange(before: number, after: number, isRate = false) {
     if (after > before) {
@@ -1820,6 +2064,7 @@ if (outstanding <= 0) {
           )}
         </div>
 
+        {/* US-08 - A before and after of loan details from a user’s decision
         {/*Before vs After*/}
         {previousLoan && (
           <div
@@ -1928,6 +2173,7 @@ if (outstanding <= 0) {
           </div>
         )}
 
+        {/*US-09 - A “simulation complete” details page with information on how the user ended up after they made their decisions
         {/* Scenario or completion message */}
         {scenario ? (
           <LoanScenarioView scenario={scenario} onChoose={handleChoice} />
@@ -2026,6 +2272,7 @@ export default function CarFinanceSimulatorPage() {
   const [mode, setMode] = useState<"setup" | "simulate">("setup");
   const [simLoan, setSimLoan] = useState<LoanState | null>(null);
 
+  //US-01 - Build a car loan calculator where the user can put in their own inputs
   //default values
   const [financeType, setFinanceType] = useState<FinanceType>("loan");
   const [cashPrice, setCashPrice] = useState(25000);
@@ -2045,6 +2292,8 @@ export default function CarFinanceSimulatorPage() {
   //keep a separate string for the term input to avoid getting stuck at 1
   const [termStr, setTermStr] = useState("60");
 
+  //US-01 - Build a car loan calculator where the user can put in their own inputs
+  //US-03 - Input Validation
   //useMemo recalculates result when inputs change, keeps UI responsive
   const result = useMemo(() => {
     try {
@@ -2077,6 +2326,8 @@ function handleEditPresetDetails() {
   const inputs: Inputs = { cashPrice, deposit, fees, aprPct, termMonths, financeType, balloon };
   const initialLoan = createInitialLoanState(inputs, result);
 
+  //US-10 - Simulation scenarios are randomised and selected from a large pool of possible scenarios
+  //Selecting a random subset 
   const shuffled = shuffleArray(loanScenarios);
   const selected = shuffled.slice(0, 10); //10 scenarios per simulation
 
@@ -2085,6 +2336,7 @@ function handleEditPresetDetails() {
   setMode("simulate");
 }
 
+//US-14 - User can choose a preset (type of car) with preset finance details
 //Applies a selected preset to the calculator inputs
 function applyPreset(preset: FinancePreset) {
   setFinanceType(preset.financeType);
@@ -2170,7 +2422,8 @@ function applyPreset(preset: FinancePreset) {
                 boxShadow: "0 4px 10px rgba(0,0,0,0.04)",
                 position: "relative",
               }}
-            >
+            >     
+                  {/*US-14 - User can choose a preset (type of car) with preset finance details
                   {/* Preset details */}
 {selectedPresetId && (
   <div
@@ -2248,7 +2501,7 @@ function applyPreset(preset: FinancePreset) {
     position: "relative",
     maxWidth: "720px",
   }}
->
+>         {/* US-14 - User can choose a preset (type of car) with preset finance details*/}
           <select
             className="select"
             value={selectedPresetId}
@@ -2353,6 +2606,7 @@ function applyPreset(preset: FinancePreset) {
                   </select>
                 </label>
 
+                {/* US-01 - Build a car loan calculator where the user can put in their own inputs */}
                 {/*Where user edits inputs */}
                 {/* Car name input */}
                 <label className="label">
@@ -2365,6 +2619,8 @@ function applyPreset(preset: FinancePreset) {
                 placeholder="e.g. 2019 VW Golf"
               />
             </label>
+
+                {/* US-05 - Tooltips added to loan form headings
                 {/*Car Price Input*/}
                 <label className="label">
                   <span className="tooltip">
@@ -2520,13 +2776,15 @@ function applyPreset(preset: FinancePreset) {
             </div>
             )}
 
+            {/* US-03 - Input Validation
             {/*Errors*/}
             {error && (
               <p className="text-danger mt-12">
                 {error}
               </p>
             )}
-
+ 
+            {/* US-01 - Build a car loan calculator where the user can put in their own inputs */}
             {/*Results*/}
             {result && !error && (
               <div className="mt-24">

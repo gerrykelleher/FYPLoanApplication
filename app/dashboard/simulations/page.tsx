@@ -18,6 +18,7 @@ type SavedSimulationRow = {
 
   //user defined name for simulation
   name: string | null;
+  car_name: string | null; //optional
 
   finance_type: "loan" | "pcp";
   cash_price: number;
@@ -94,7 +95,7 @@ export default function DashboardPage() {
       const { data, error } = await supabase
         .from("saved_simulations")
         .select(
-          "id, user_id, created_at, name, finance_type, cash_price, deposit, apr, term_months, balloon, final_monthly_payment, total_interest, months_remaining, decisions"
+          "id, user_id, created_at, name, car_name, finance_type, cash_price, deposit, apr, term_months, balloon, final_monthly_payment, total_interest, months_remaining, decisions"
         )
         .order("created_at", { ascending: false });
 
@@ -424,6 +425,12 @@ export default function DashboardPage() {
                               <div style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "2px" }}>
                                 {new Date(r.created_at).toLocaleString()} • {r.finance_type.toUpperCase()}
                               </div>
+                              {r.car_name && (
+                      <div style={{ fontSize: "0.9rem", opacity: 0.85, marginTop: "2px" }}>
+                        <b>Car:</b> {r.car_name}
+                      </div>
+                    )}
+
                             </>
                           ) : (
                             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>

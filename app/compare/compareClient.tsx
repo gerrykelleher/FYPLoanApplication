@@ -19,6 +19,7 @@ type SavedSimulationRow = {
   user_id: string;
   created_at: string;
   name: string | null;
+    car_name: string | null; //optional
 
   finance_type: "loan" | "pcp";
   cash_price: number;
@@ -109,7 +110,7 @@ export default function CompareClient() {
       const { data, error } = await supabase
         .from("saved_simulations")
         .select(
-          "id, user_id, created_at, name, finance_type, cash_price, deposit, apr, term_months, balloon, final_monthly_payment, total_interest, months_remaining, decisions"
+          "id, user_id, created_at, name, car_name, finance_type, cash_price, deposit, apr, term_months, balloon, final_monthly_payment, total_interest, months_remaining, decisions"
         )
         //Supabase filter syntax documented (PostgREST "in" style)
         .filter("id", "in", `(${ids.join(",")})`);
@@ -263,6 +264,12 @@ export default function CompareClient() {
                         style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid #e5e7eb" }}
                       >
                         <div style={{ fontWeight: 800 }}>{s.name ?? fallbackName(s)}</div>
+                        {s.car_name && (
+                    <div style={{ fontSize: "0.85rem", opacity: 0.85, marginTop: "2px" }}>
+                        <b>Car:</b> {s.car_name}
+                    </div>
+                    )}
+
                         <div style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "2px" }}>
                           {new Date(s.created_at).toLocaleString()} • {s.finance_type.toUpperCase()}
                         </div>
