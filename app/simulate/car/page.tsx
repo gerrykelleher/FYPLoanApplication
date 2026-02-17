@@ -1864,6 +1864,10 @@ function LoanSimulation({
   const [showSummary, setShowSummary] = useState(false);
   const [decisionHistory, setDecisionHistory] = useState<string[]>([]);
   const [endMessage, setEndMessage] = useState<string | null>(null);
+  const [paymentHistory, setPaymentHistory] = useState<number[]>([  //Track monthly payment trend for sparkline graph
+    initialLoan.monthlyPayment,
+  ]);
+
 
 
   const scenario = scenarios[scenarioIndex] ?? null;
@@ -1890,6 +1894,9 @@ function LoanSimulation({
   //Apply user choice
   const updatedLoan = choice.apply(loan); 
   setLoan(updatedLoan);
+  
+  //US-18 - Graphical Insights
+  setPaymentHistory((prev) => [...prev, updatedLoan.monthlyPayment]); //track payment changes for sparkline graph
   setExplanation(choice.explanation);
 
   //If finance is fully cleared, end simulation early
@@ -1934,7 +1941,52 @@ if (outstanding <= 0) {
     setShowSummary(false);
     setDecisionHistory([]);
     setEndMessage(null);
+    setPaymentHistory([initialLoan.monthlyPayment]);
   }
+
+  //US-18 - Graphical Insights
+  //Sparkline graph to show trends over time
+  function Sparkline({
+  values,
+  width = 200,
+  height = 45,
+}: {
+  values: number[];
+  width?: number;
+  height?: number;
+}) {
+  if (!values || values.length < 2) {
+    return <div style={{ fontSize: "0.85rem", opacity: 0.6 }}>No trend yet</div>;
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+
+  const points = values
+    .map((v, i) => {
+      const x = (i / (values.length - 1)) * width;
+      const y = height - ((v - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  const lastValue = values[values.length - 1];
+  const lastY = height - ((lastValue - min) / range) * height;
+
+  return (
+    <svg width={width} height={height}>
+      <polyline
+        fill="none"
+        stroke="#3b82f6"
+        strokeWidth="2"
+        points={points}
+      />
+      <circle cx={width} cy={lastY} r="3" fill="#3b82f6" />
+    </svg>
+  );
+}
+
 
   //US-08 - A before and after of loan details from a user’s decision
   //helper to render change arrows/colour
@@ -2028,6 +2080,36 @@ if (outstanding <= 0) {
             <span className="small">Simulation complete</span>
           )}
         </div>
+
+          {/*US-18 - Graphical Insights}
+          {/*Sparkline graph showing monthly payment trend over time*/}
+        <div
+  style={{
+    backgroundColor: "#ffffff",
+    borderRadius: "14px",
+    padding: "16px",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+    marginBottom: "16px",
+    maxWidth: "720px",
+    marginLeft: "auto",
+    marginRight: "auto",
+  }}
+>
+  <div style={{ fontWeight: 700, marginBottom: "8px" }}>
+    Monthly repayment trend
+  </div>
+
+  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+    <Sparkline values={paymentHistory} />
+
+    <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
+      Start: €{paymentHistory[0].toFixed(2)}
+      <br />
+      Now: €{paymentHistory[paymentHistory.length - 1].toFixed(2)}
+    </div>
+  </div>
+</div>
+
 
         {/*Loan summary card*/}
         <div
