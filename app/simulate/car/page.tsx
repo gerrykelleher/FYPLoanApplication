@@ -1588,11 +1588,13 @@ function FinalSummary({
   decisions,
   onClose,
   carName,
+  paymentHistory,
 }: {
   finalLoan: LoanState;
   decisions: string[];
   onClose: () => void;
   carName: string;
+  paymentHistory: number[];
 }) {
   //Tracks whether the save request is currently in progress
   const [isSaving, setIsSaving] = useState(false);
@@ -1642,6 +1644,8 @@ function FinalSummary({
       months_remaining: finalLoan.termMonthsRemaining,
 
       decisions: decisions,
+      payment_history: paymentHistory,
+
     });
 
     // Handle database insert failure
@@ -1761,10 +1765,14 @@ function FinalSummary({
           }}
         >
           {carName && (
-          <p style={{ marginTop: "6px", opacity: 0.85 }}>
-            <b>Car:</b> {carName}
-          </p>
-        )}
+  <div style={summaryCardStyle}>
+    <b>Car</b>
+    <span style={valueStyle}>
+      {carName}
+    </span>
+  </div>
+)}
+
           <div style={summaryCardStyle}>
             <b>Final monthly payment</b>
             <span style={valueStyle}>
@@ -2301,6 +2309,7 @@ if (outstanding <= 0) {
                 decisions={decisionHistory}
                 onClose={() => setShowSummary(false)}
                 carName={carName}
+                paymentHistory={paymentHistory}
               />
             )}
           </div>

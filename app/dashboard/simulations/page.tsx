@@ -4,7 +4,6 @@
 //ChatGPT was used as a development aid to: Adapt generic CRUD patterns to the saved simulations schema, assist with React state management and UI logic and to help integrate Supabase Auth with Row Level Security (RLS)
 "use client";
 
-
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "../../components/navbar";
 import { supabase } from "../../../lib/supabaseClient";
@@ -32,7 +31,47 @@ type SavedSimulationRow = {
   months_remaining: number;
 
   decisions: unknown;
+  payment_history: number[] | null;
 };
+
+//Small sparkline component for payment trend
+function Sparkline({
+  values,
+  width = 260,
+  height = 70,
+}: {
+  values: number[] | null;
+  width?: number;
+  height?: number;
+}) {
+  const clean = (values ?? []).filter((v) => typeof v === "number" && Number.isFinite(v));
+
+  if (clean.length < 2) {
+    return <div style={{ fontSize: "0.85rem", opacity: 0.6 }}>No trend yet</div>;
+  }
+
+  const min = Math.min(...clean);
+  const max = Math.max(...clean);
+  const range = max - min || 1;
+
+  const points = clean
+    .map((v, i) => {
+      const x = (i / (clean.length - 1)) * width;
+      const y = height - ((v - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  const last = clean[clean.length - 1];
+  const lastY = height - ((last - min) / range) * height;
+
+  return (
+    <svg width={width} height={height} style={{ display: "block" }}>
+      <polyline fill="none" stroke="#3b82f6" strokeWidth="2" points={points} />
+      <circle cx={width} cy={lastY} r="3" fill="#3b82f6" />
+    </svg>
+  );
+}
 
 //Dashboard page component
 export default function DashboardPage() {
@@ -95,7 +134,7 @@ export default function DashboardPage() {
       const { data, error } = await supabase
         .from("saved_simulations")
         .select(
-          "id, user_id, created_at, name, car_name, finance_type, cash_price, deposit, apr, term_months, balloon, final_monthly_payment, total_interest, months_remaining, decisions"
+          "id, user_id, created_at, name, car_name, finance_type, cash_price, deposit, apr, term_months, balloon, final_monthly_payment, total_interest, months_remaining, decisions, payment_history"
         )
         .order("created_at", { ascending: false });
 
@@ -149,7 +188,13 @@ export default function DashboardPage() {
     return rows.filter((r) => {
       const name = (r.name ?? "").toLowerCase();
       const type = r.finance_type.toLowerCase();
-      return name.includes(q) || type.includes(q) || r.id.toLowerCase().includes(q);
+      const car = (r.car_name ?? "").toLowerCase();
+      return (
+        name.includes(q) ||
+        type.includes(q) ||
+        car.includes(q) ||
+        r.id.toLowerCase().includes(q)
+      );
     });
   }, [rows, search]);
 
@@ -318,7 +363,7 @@ export default function DashboardPage() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name / type / id…"
+                placeholder="Search by name / car / type / id…"
                 style={{
                   flex: 1,
                   padding: "10px 12px",
@@ -421,16 +466,16 @@ export default function DashboardPage() {
                         <div style={{ flex: 1 }}>
                           {!isEditing ? (
                             <>
-                              <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>{r.name ?? fallbackName(r)}</div>
+                              <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>
+                                {r.name ?? fallbackName(r)}
+                              </div>
                               <div style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "2px" }}>
                                 {new Date(r.created_at).toLocaleString()} • {r.finance_type.toUpperCase()}
                               </div>
-                              {r.car_name && (
-                      <div style={{ fontSize: "0.9rem", opacity: 0.85, marginTop: "2px" }}>
-                        <b>Car:</b> {r.car_name}
-                      </div>
-                    )}
 
+                              <div style={{ fontSize: "0.9rem", opacity: 0.85, marginTop: "2px" }}>
+                                <b>Car:</b> {r.car_name ?? "Not specified"}
+                              </div>
                             </>
                           ) : (
                             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -478,7 +523,6 @@ export default function DashboardPage() {
                         {/* Actions */}
                         {!isEditing && (
                           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                            {/*US-16 - Simple dashboard for saved simulations*/}
                             <button
                               onClick={() => setExpandedId(isExpanded ? null : r.id)}
                               style={{
@@ -525,7 +569,7 @@ export default function DashboardPage() {
                         )}
                       </div>
 
-                      {/* Expanded details */}
+                      {/* Expanded details with right-side graph */}
                       {isExpanded && !isEditing && (
                         <div
                           style={{
@@ -533,45 +577,83 @@ export default function DashboardPage() {
                             paddingTop: "12px",
                             borderTop: "1px solid #e5e7eb",
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                            gap: "10px",
-                            fontSize: "0.95rem",
+                            gridTemplateColumns: "1.2fr 0.8fr",
+                            gap: "16px",
+                            alignItems: "start",
                           }}
                         >
-                          <div>
-                            <b>Cash price:</b> €{Number(r.cash_price).toFixed(2)}
-                          </div>
-                          <div>
-                            <b>Deposit:</b> €{Number(r.deposit).toFixed(2)}
-                          </div>
-                          <div>
-                            <b>APR:</b> {Number(r.apr).toFixed(2)}%
-                          </div>
-                          <div>
-                            <b>Term months:</b> {r.term_months}
-                          </div>
-                          <div>
-                            <b>Balloon:</b>{" "}
-                            {r.finance_type === "pcp" ? `€${Number(r.balloon ?? 0).toFixed(2)}` : "N/A"}
-                          </div>
-                          <div>
-                            {/*US-16 - Simple dashboard for saved simulations*/}
-                            <b>Final monthly payment:</b> €{Number(r.final_monthly_payment).toFixed(2)}
-                          </div>
-                          <div>
-                            <b>Total interest:</b> €{Number(r.total_interest).toFixed(2)}
-                          </div>
-                          <div>
-                            <b>Months remaining:</b> {r.months_remaining}
+                          {/* LEFT: metrics + decisions */}
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                              gap: "10px",
+                              fontSize: "0.95rem",
+                            }}
+                          >
+                            <div>
+                              <b>Cash price:</b> €{Number(r.cash_price).toFixed(2)}
+                            </div>
+                            <div>
+                              <b>Deposit:</b> €{Number(r.deposit).toFixed(2)}
+                            </div>
+                            <div>
+                              <b>APR:</b> {Number(r.apr).toFixed(2)}%
+                            </div>
+                            <div>
+                              <b>Term months:</b> {r.term_months}
+                            </div>
+                            <div>
+                              <b>Balloon:</b>{" "}
+                              {r.finance_type === "pcp" ? `€${Number(r.balloon ?? 0).toFixed(2)}` : "N/A"}
+                            </div>
+                            <div>
+                              <b>Final monthly payment:</b> €{Number(r.final_monthly_payment).toFixed(2)}
+                            </div>
+                            <div>
+                              <b>Total interest:</b> €{Number(r.total_interest).toFixed(2)}
+                            </div>
+                            <div>
+                              <b>Months remaining:</b> {r.months_remaining}
+                            </div>
+
+                            <div style={{ gridColumn: "1 / -1" }}>
+                              <b>Decisions:</b>
+                              <div style={{ marginTop: "6px" }}>{renderDecisions(r.decisions)}</div>
+                            </div>
+
+                            <div style={{ gridColumn: "1 / -1", fontSize: "0.85rem", opacity: 0.7 }}>
+                              <b>ID:</b> {r.id}
+                            </div>
                           </div>
 
-                          <div style={{ gridColumn: "1 / -1" }}>
-                            <b>Decisions:</b>
-                            <div style={{ marginTop: "6px" }}>{renderDecisions(r.decisions)}</div>
-                          </div>
+                          {/* RIGHT: graph card */}
+                          <div
+                            style={{
+                              border: "1px solid #e5e7eb",
+                              borderRadius: "12px",
+                              padding: "12px",
+                              background: "#f9fafb",
+                              boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+                            }}
+                          >
+                            <div style={{ fontWeight: 800, marginBottom: "8px" }}>
+                              Monthly repayment trend
+                            </div>
 
-                          <div style={{ gridColumn: "1 / -1", fontSize: "0.85rem", opacity: 0.7 }}>
-                            <b>ID:</b> {r.id}
+                            <Sparkline values={r.payment_history} width={260} height={70} />
+
+                            <div style={{ marginTop: "8px", fontSize: "0.9rem", opacity: 0.85 }}>
+                              {r.payment_history?.length ? (
+                                <>
+                                  Start: €{r.payment_history[0].toFixed(2)}
+                                  <br />
+                                  End: €{r.payment_history[r.payment_history.length - 1].toFixed(2)}
+                                </>
+                              ) : (
+                                <>No data saved</>
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}
