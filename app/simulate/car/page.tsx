@@ -1584,12 +1584,14 @@ import Link from "next/link";
 
 //US-09 - A “simulation complete” details page with information on how the user ended up after they made their decisions
 function FinalSummary({
+  initialLoan,
   finalLoan,
   decisions,
   onClose,
   carName,
   paymentHistory,
 }: {
+  initialLoan: LoanState;
   finalLoan: LoanState;
   decisions: string[];
   onClose: () => void;
@@ -1605,16 +1607,31 @@ function FinalSummary({
   //Stores any save-related error message
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  //Handles saving the simulation for signed-in users only
-  async function handleSaveSimulation() {
-    //Prevent duplicate saves
-    if (isSaving || isSaved) return;
+//Helper function to format numbers as euros with 2 decimal places
+function formatEuro(n: number) {
+  return `€${Number(n).toFixed(2)}`;
+}
 
-    setIsSaving(true);
-    setSaveError(null);
+//Calculate key summary stats to store with the simulation for easy display on the dashboard and details page without needing to recalculate
+const monthlyChange =
+  finalLoan.monthlyPayment - initialLoan.monthlyPayment;
+//Calculate percentage change in monthly payment, handling division by zero
+const interestChange =
+  finalLoan.totalInterestOnFinance - initialLoan.totalInterestOnFinance;
+//Calculate percentage change in total interest, handling division by zero
+const termChange =
+  finalLoan.termMonthsRemaining - initialLoan.termMonthsRemaining;
 
-    //US-15 - User can save, rename, organise, delete completed simulations
-    //Retrieve the currently authenticated user from Supabase
+//Handles saving the simulation for signed-in users only
+async function handleSaveSimulation() {
+  //Prevent duplicate saves
+  if (isSaving || isSaved) return;
+
+  setIsSaving(true);
+  setSaveError(null);
+
+  //US-15 - User can save, rename, organise, delete completed simulations
+  //Retrieve the currently authenticated user from Supabase
     const {
       data: { user },
       error: authError,
@@ -1678,27 +1695,39 @@ function FinalSummary({
   };
 
   return (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      backgroundColor: "rgba(0,0,0,0.45)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1000,
+      padding: "16px",
+    }}
+  >
     <div
       style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0,0,0,0.45)",
+        maxWidth: "800px",
+        width: "100%",
+        background: "#ffffff",
+        borderRadius: "16px",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+        fontFamily: "Arial, sans-serif",
+
+        // important for layout
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-        padding: "16px",
+        flexDirection: "column",
+        maxHeight: "85vh",
+        overflow: "hidden",
       }}
     >
+      {/* scrollable body */}
       <div
         style={{
-          maxWidth: "800px",
-          width: "100%",
-          background: "#ffffff",
-          borderRadius: "16px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
           padding: "32px 40px",
-          fontFamily: "Arial, sans-serif",
+          overflowY: "auto",
         }}
       >
         {/* Header */}
@@ -1709,9 +1738,7 @@ function FinalSummary({
             marginBottom: "20px",
           }}
         >
-          <h2 style={{ margin: 0, fontSize: "1.8rem" }}>
-            Simulation Summary
-          </h2>
+          <h2 style={{ margin: 0, fontSize: "1.8rem" }}>Simulation Summary</h2>
           <p style={{ opacity: 0.8, marginTop: "6px" }}>
             Here's a clear breakdown of how your decisions impacted your finance agreement.
           </p>
@@ -1765,40 +1792,30 @@ function FinalSummary({
           }}
         >
           {carName && (
-  <div style={summaryCardStyle}>
-    <b>Car</b>
-    <span style={valueStyle}>
-      {carName}
-    </span>
-  </div>
-)}
+            <div style={summaryCardStyle}>
+              <b>Car</b>
+              <span style={valueStyle}>{carName}</span>
+            </div>
+          )}
 
           <div style={summaryCardStyle}>
             <b>Final monthly payment</b>
-            <span style={valueStyle}>
-              €{finalLoan.monthlyPayment.toFixed(2)}
-            </span>
+            <span style={valueStyle}>€{finalLoan.monthlyPayment.toFixed(2)}</span>
           </div>
 
           <div style={summaryCardStyle}>
             <b>Total interest remaining</b>
-            <span style={valueStyle}>
-              €{finalLoan.totalInterestOnFinance.toFixed(2)}
-            </span>
+            <span style={valueStyle}>€{finalLoan.totalInterestOnFinance.toFixed(2)}</span>
           </div>
 
           <div style={summaryCardStyle}>
             <b>Months remaining</b>
-            <span style={valueStyle}>
-              {finalLoan.termMonthsRemaining}
-            </span>
+            <span style={valueStyle}>{finalLoan.termMonthsRemaining}</span>
           </div>
 
           <div style={summaryCardStyle}>
             <b>Annual interest rate</b>
-            <span style={valueStyle}>
-              {(finalLoan.annualRate * 100).toFixed(2)}%
-            </span>
+            <span style={valueStyle}>{(finalLoan.annualRate * 100).toFixed(2)}%</span>
           </div>
         </div>
 
@@ -1810,42 +1827,114 @@ function FinalSummary({
           ))}
         </ul>
 
-        {/* Action buttons */}
-        <div style={{ display: "flex", gap: "12px" }}>
-          <button
-            onClick={handleSaveSimulation}
-            disabled={isSaving || isSaved}
-            style={{
-              backgroundColor: isSaved ? "#9ca3af" : "#10b981",
-              color: "white",
-              padding: "10px 22px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: isSaved ? "default" : "pointer",
-              fontSize: "1rem",
-            }}
-          >
-            {isSaving ? "Saving…" : isSaved ? "Saved" : "Save simulation"}
-          </button>
+        {/* Financial Impact Summary */}
+        <div
+          style={{
+            marginTop: "20px",
+            border: "1px solid #e5e7eb",
+            borderRadius: "14px",
+            padding: "16px",
+            background: "#f9fafb",
+          }}
+        >
+          <h3 style={{ marginTop: 0 }}>Financial Impact Summary</h3>
 
-          <button
-            onClick={onClose}
-            style={{
-              backgroundColor: "#3b82f6",
-              color: "white",
-              padding: "10px 22px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "1rem",
-            }}
-          >
-            Close summary
-          </button>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left", padding: "6px 0" }}>Metric</th>
+                <th style={{ textAlign: "left" }}>Start</th>
+                <th style={{ textAlign: "left" }}>End</th>
+                <th style={{ textAlign: "left" }}>Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Monthly Payment</td>
+                <td>{formatEuro(initialLoan.monthlyPayment)}</td>
+                <td>{formatEuro(finalLoan.monthlyPayment)}</td>
+                <td style={{ fontWeight: 700 }}>
+                  {monthlyChange > 0 ? "+" : ""}
+                  {formatEuro(monthlyChange)}
+                </td>
+              </tr>
+
+              <tr>
+                <td>Total Interest</td>
+                <td>{formatEuro(initialLoan.totalInterestOnFinance)}</td>
+                <td>{formatEuro(finalLoan.totalInterestOnFinance)}</td>
+                <td style={{ fontWeight: 700 }}>
+                  {interestChange > 0 ? "+" : ""}
+                  {formatEuro(interestChange)}
+                </td>
+              </tr>
+
+              <tr>
+                <td>Remaining Term</td>
+                <td>{initialLoan.termMonthsRemaining} months</td>
+                <td>{finalLoan.termMonthsRemaining} months</td>
+                <td style={{ fontWeight: 700 }}>
+                  {termChange > 0 ? "+" : ""}
+                  {termChange} months
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style={{ marginTop: "12px", fontWeight: 700 }}>
+            {interestChange > 0
+              ? `Your decisions increased total borrowing cost by ${formatEuro(interestChange)}.`
+              : `Your decisions reduced total borrowing cost by ${formatEuro(Math.abs(interestChange))}.`}
+          </div>
         </div>
       </div>
+
+      {/* footer stays visible */}
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          justifyContent: "flex-end",
+          padding: "16px 40px",
+          borderTop: "1px solid #e5e7eb",
+          background: "#ffffff",
+        }}
+      >
+        <button
+          onClick={handleSaveSimulation}
+          disabled={isSaving || isSaved}
+          style={{
+            backgroundColor: isSaved ? "#9ca3af" : "#10b981",
+            color: "white",
+            padding: "10px 22px",
+            borderRadius: "8px",
+            border: "none",
+            cursor: isSaved ? "default" : "pointer",
+            fontSize: "1rem",
+          }}
+        >
+          {isSaving ? "Saving…" : isSaved ? "Saved" : "Save simulation"}
+        </button>
+
+        <button
+          onClick={onClose}
+          style={{
+            backgroundColor: "#3b82f6",
+            color: "white",
+            padding: "10px 22px",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "1rem",
+          }}
+        >
+          Close summary
+        </button>
+      </div>
     </div>
-  );
+  </div>
+);
+
 }
 
 
@@ -2305,6 +2394,7 @@ if (outstanding <= 0) {
 
             {showSummary && (
               <FinalSummary
+                initialLoan={initialLoan}
                 finalLoan={loan}
                 decisions={decisionHistory}
                 onClose={() => setShowSummary(false)}
