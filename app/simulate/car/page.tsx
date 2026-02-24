@@ -46,6 +46,7 @@ type FinancePreset = {
 
 //US-14 - User can choose a preset (type of car) with preset finance details
 //preset car finance options
+//some preset details generated with ChatGPT based on typical market offers for different car types.
 const financePresets: FinancePreset[] = [
   //Student / budget (Loan)
   {
@@ -264,7 +265,7 @@ type ScenarioNode = {
 //Array shuffling logic adapted from GeeksforGeeks:
 //"How to Shuffle an Array Using JavaScript" https://www.geeksforgeeks.org/javascript/how-to-shuffle-an-array-using-javascript/
 function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array]; // copy to keep original order intact
+  const shuffled = [...array]; //copy to keep original order intact
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -281,6 +282,7 @@ function round2(x: number) {
 //PMT formula function generated with ChatGPT guidance
 //Follows the standard annuity equation for fixed rate loans.
 //Verified using the Corporate Finance Institute – "Loan Payment Formula" (2025).
+//US-01 - Build a car loan calculator where the user can put in their own inputs
 function pmtLoan(P: number, r: number, n: number) {
   if (r === 0) return P / n;
   const a = Math.pow(1 + r, n);
@@ -290,6 +292,7 @@ function pmtLoan(P: number, r: number, n: number) {
 //Calculates the monthly payment for a PCP-style loan that includes a final balloon (GMFV).
 //Formula derived from the standard annuity equation with a future value term.
 //Created with ChatGPT guidance and verified using the Corporate Finance Institute
+//US-01 - Build a car loan calculator where the user can put in their own inputs
 function pmtWithBalloon(P: number, FV: number, r: number, n: number) {
   if (r === 0) return (P - FV) / n; // simple linear if 0% APR
   const a = Math.pow(1 + r, n);
@@ -415,10 +418,12 @@ function createInitialLoanState(inputs: Inputs, result: Result): LoanState {
   return recalcLoanFromState(base);
 }
 
-//US-06 - Scenarios built into simulator
+//US-06 - Scenarios built into simulator 
 //US-07 - User can pick between two decisions in reaction to a scenario
-//Scenarios
+//Scenarios 
+//Scenario code adapted from GeeksforGeeks "Create a Text-Based Adventure Game Using ReactJS" with ChatGPT aid.
 //Each choice updates the LoanState based on user decisions
+//Some scenario contents have been generated with ChatGPT assistance, based on common real life car ownership events and geopolitical trends.
 const loanScenarios: ScenarioNode[] = [
   {
     id: 0,
@@ -1665,7 +1670,7 @@ async function handleSaveSimulation() {
 
     });
 
-    // Handle database insert failure
+    //Handle database insert failure
     if (error) {
       setSaveError("Failed to save simulation. Please try again.");
       setIsSaving(false);
@@ -1673,7 +1678,7 @@ async function handleSaveSimulation() {
     }
 
     //US-15 - User can save, rename, organise, delete completed simulations
-    // Mark simulation as successfully saved
+    //Mark simulation as successfully saved
     setIsSaving(false);
     setIsSaved(true);
   }
@@ -1716,7 +1721,7 @@ async function handleSaveSimulation() {
         boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
         fontFamily: "Arial, sans-serif",
 
-        // important for layout
+        //important for layout
         display: "flex",
         flexDirection: "column",
         maxHeight: "85vh",
@@ -1953,7 +1958,7 @@ function LoanSimulation({
   carName: string;
 }) {
 
-
+  //Current loan state that gets updated after each decision.
   const [loan, setLoan] = useState<LoanState>(initialLoan);
   const [scenarioIndex, setScenarioIndex] = useState<number>(0);
   const [explanation, setExplanation] = useState<string | null>(null);
@@ -1978,7 +1983,7 @@ function LoanSimulation({
 
   //US-06 - Scenarios built into simulator
   //US-07 - User can pick between two decisions in reaction to a scenario
-  function handleChoice(choice: ScenarioChoice) {
+  function handleChoice(choice: ScenarioChoice) { //called when user makes a decision in the scenario view
   //US-08 - A before and after of loan details from a user’s decision
   //stores current loan for before/after comparison
   setPreviousLoan(loan);
@@ -2005,7 +2010,7 @@ if (outstanding <= 0) {
   setEndMessage("Simulation ended early: your finance balance reached €0.");
   //US-09 - A “simulation complete” details page with information on how the user ended up after they made their decisions
   setShowSummary(true);
-  setScenarioIndex(scenarios.length); // forces scenario to null
+  setScenarioIndex(scenarios.length); //forces scenario to null
   return;
 }
 
@@ -2014,7 +2019,7 @@ if (outstanding <= 0) {
   if (choice.endsSimulation) {
     setEndMessage("Simulation ended early: you chose to settle the finance agreement.");
     setShowSummary(true);
-    setScenarioIndex(scenarios.length); // forces scenario to null
+    setScenarioIndex(scenarios.length); //forces scenario to null
     return;
   }
 
@@ -2022,7 +2027,7 @@ if (outstanding <= 0) {
 
   if (nextIndex >= scenarios.length) {
     setShowSummary(true);
-    setScenarioIndex(scenarios.length); // forces scenario to null
+    setScenarioIndex(scenarios.length); //forces scenario to null
   } else {
     setScenarioIndex(nextIndex);
   }
@@ -2043,6 +2048,7 @@ if (outstanding <= 0) {
 
   //US-18 - Graphical Insights
   //Sparkline graph to show trends over time
+  //Generated with guidance from ChatGPT and adapted to fit the app's styling and data structure
   function Sparkline({
   values,
   width = 200,
@@ -2455,6 +2461,7 @@ export default function CarFinanceSimulatorPage() {
 
   //US-01 - Build a car loan calculator where the user can put in their own inputs
   //default values
+
   const [financeType, setFinanceType] = useState<FinanceType>("loan");
   const [cashPrice, setCashPrice] = useState(25000);
   const [deposit, setDeposit] = useState(5000);
@@ -2542,7 +2549,7 @@ function applyPreset(preset: FinancePreset) {
   //used ChatGPT as aid
   return (
     <>
-      <Navbar />  {/*Added navbar*/}
+      <Navbar />  {/*navbar*/}
 
       {/* SETUP / CALCULATOR MODE */}
       {mode === "setup" && (
@@ -2764,7 +2771,8 @@ function applyPreset(preset: FinancePreset) {
               marginTop: "30px",
             }}
           >
-            {/*Inputs*/}
+            {/*US-01 - Build a car loan calculator where the user can put in their own inputs*/}
+            {/*Where user edits inputs */}
             {inputTab === "custom" && (
             <div ref={customSectionRef} className="grid-2 mt-20">
               <div className="grid-gap-10">
@@ -2928,6 +2936,8 @@ function applyPreset(preset: FinancePreset) {
                   />
                 </label>
 
+
+                {/* US-01 - Build a car loan calculator where the user can put in their own inputs */}
                 {/*Balloon Input for PCP only*/}
                 {financeType === "pcp" && (
                   <label className="label">
@@ -2976,7 +2986,7 @@ function applyPreset(preset: FinancePreset) {
                   <Stat label="Total amount repayable" value={`€${result.totalAmountRepayable.toFixed(2)}`} />
                   <Stat label="Total cost of credit" value={`€${result.totalCostOfCredit.toFixed(2)}`} />
                 </div>
-
+                      {/*Us-02 - 12 month payment amount tracker*/}
                       {/* Repayment schedule dropdown (styled using ChatGPT assistance) */}
         <details className="mt-24" style={{ maxWidth: "100%" }}>
           <summary
@@ -3011,7 +3021,8 @@ function applyPreset(preset: FinancePreset) {
                 </tr>
               </thead>
               <tbody>
-                {result.rows.map((r) => (
+                {/*US-02 - 12 month payment amount tracker*/}
+                {result.rows.map((r) => ( //each row represents a month of repayments, generated by the calculate function
                   <tr key={r.period}>
                     <Td>{r.period}</Td>
                     <Td>€{r.payment.toFixed(2)}</Td>

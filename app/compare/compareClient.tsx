@@ -64,16 +64,18 @@ export default function CompareClient() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [sims, setSims] = useState<SavedSimulationRow[]>([]);
 
+  //Load simulations when IDs change
   useEffect(() => {
     let cancelled = false;
 
+    //Load simulations and check auth status
     async function load() {
       setLoading(true);
       setErrorMsg(null);
       setAuthMessage(null);
 
       /**
-        Auth gate: Your dashboard already requires login, but we keep this page safe if a user opens /compare directly. Supabase RLS should still enforce row access server-side.
+        Auth gate: dashboard already requires login, but we keep this page safe if a user opens /compare directly. Supabase RLS should still enforce row access server-side.
        */
       const {
         data: { user },
