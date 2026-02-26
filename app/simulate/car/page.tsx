@@ -426,13 +426,13 @@ function createInitialLoanState(inputs: Inputs, result: Result): LoanState {
 //Some scenario contents have been generated with ChatGPT assistance, based on common real life car ownership events and geopolitical trends.
 const loanScenarios: ScenarioNode[] = [
   {
-    id: 0,
+    id: 0, 
     title: "Interest Rate Increase",
     description:
       "After one year, your lender increases the interest rate on your finance by 1%. How would you like to respond?",
     choices: [
       {
-        id: "rate-up-keep-term",
+        id: "rate-up-keep-term",  
         label: "Accept higher monthly repayment (keep the same term)",
         apply: (loan) => {
           const updated: LoanState = {
@@ -604,7 +604,7 @@ const loanScenarios: ScenarioNode[] = [
       {
   id: "settle-now",
   label: "Use savings to settle the loan now",
-  endsSimulation: true, // ✅ stop immediately if chosen
+  endsSimulation: true, //stop immediately if chosen
   apply: (loan) => ({
     ...loan,
     principal: 0,
@@ -1584,7 +1584,7 @@ function LoanScenarioView({
   );
 }
 
-// Final summary card adapted from W3Schools "How To - CSS Modals" and "How To - CSS Cards"
+//Final summary card adapted from W3Schools "How To - CSS Modals" and "How To - CSS Cards"
 import Link from "next/link";
 
 //US-09 - A “simulation complete” details page with information on how the user ended up after they made their decisions
@@ -1628,6 +1628,7 @@ const termChange =
   finalLoan.termMonthsRemaining - initialLoan.termMonthsRemaining;
 
 //Handles saving the simulation for signed-in users only
+//async functio is used to allow for awaiting the Supabase auth and database calls, ensuring proper flow and error handling
 async function handleSaveSimulation() {
   //Prevent duplicate saves
   if (isSaving || isSaved) return;
@@ -2184,179 +2185,284 @@ if (outstanding <= 0) {
           )}
         </div>
 
-          {/*US-18 - Graphical Insights}
-          {/*Sparkline graph showing monthly payment trend over time*/}
-        <div
+        {/*Loan summary card (click to expand)*/}
+<details
   style={{
     backgroundColor: "#ffffff",
     borderRadius: "14px",
     padding: "16px",
     boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
-    marginBottom: "16px",
-    maxWidth: "720px",
-    marginLeft: "auto",
-    marginRight: "auto",
+    marginTop: "10px",
+    marginBottom: "10px",
   }}
 >
-  <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-    Monthly repayment trend
-  </div>
+  <summary
+    style={{
+      cursor: "pointer",
+      fontWeight: 700,
+      listStyle: "none",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "12px",
+      padding: "8px 10px",
+      borderRadius: "10px",
+    }}
+  >
+    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <span
+        className="chevron"
+        style={{
+          display: "inline-block",
+          transition: "transform 0.2s ease",
+          fontSize: "0.95rem",
+          opacity: 0.85,
+        }}
+      >
+        ▶
+      </span>
 
-  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-    <Sparkline values={paymentHistory} />
-
-    <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
-      Start: €{paymentHistory[0].toFixed(2)}
-      <br />
-      Now: €{paymentHistory[paymentHistory.length - 1].toFixed(2)}
+      <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
+        <span>Loan summary</span>
+        <span style={{ fontSize: "0.85rem", opacity: 0.6, fontWeight: 500 }}>
+          Click to expand
+        </span>
+      </div>
     </div>
+
+    <span style={{ fontWeight: 600, opacity: 0.8 }}>
+      €{loan.monthlyPayment.toFixed(2)} / month
+    </span>
+  </summary>
+
+  <div style={{ marginTop: "14px" }}>
+    <p>
+      <b>Principal remaining:</b> €{loan.principal.toFixed(2)}
+    </p>
+    <p>
+      <b>Annual interest rate:</b>{" "}
+      {(loan.annualRate * 100).toFixed(2)}%
+    </p>
+    <p>
+      <b>Term remaining:</b> {loan.termMonthsRemaining} months
+    </p>
+    <p>
+      <b>Monthly repayment:</b> €{loan.monthlyPayment.toFixed(2)}
+    </p>
+    <p>
+      <b>Total interest on this finance:</b> €
+      {loan.totalInterestOnFinance.toFixed(2)}
+    </p>
+    {loan.financeType === "pcp" && (
+      <p>
+        <b>Balloon / GMFV at end:</b> €{loan.balloon.toFixed(2)}
+      </p>
+    )}
   </div>
-</div>
 
+  <style jsx>{`
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+    details summary:hover {
+      background: #f3f4f6;
+    }
+    details[open] .chevron {
+      transform: rotate(90deg);
+    }
+  `}</style>
+</details>
 
-        {/*Loan summary card*/}
-        <div
+{/* US-08 - A before and after of loan details from a user’s decision
+{/*Before vs After*/} 
+{previousLoan && (
+  <details
+    style={{
+      backgroundColor: "#ffffff",
+      borderRadius: "14px",
+      padding: "16px",
+      boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
+      marginBottom: "16px",
+      maxWidth: "720px",
+      marginLeft: "auto",
+      marginRight: "auto",
+    }}
+  >
+    <summary
+      style={{
+        cursor: "pointer",
+        fontWeight: 700,
+        listStyle: "none",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "12px",
+        padding: "8px 10px",
+        borderRadius: "10px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <span
+          className="chevron"
           style={{
-            backgroundColor: "#ffffff",
-            borderRadius: "14px",
-            padding: "24px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
-            marginTop: "10px",
-            marginBottom: "10px",
+            display: "inline-block",
+            transition: "transform 0.2s ease",
+            fontSize: "0.95rem",
+            opacity: 0.85,
           }}
         >
-          <p>
-            <b>Principal remaining:</b> €{loan.principal.toFixed(2)}
-          </p>
-          <p>
-            <b>Annual interest rate:</b>{" "}
-            {(loan.annualRate * 100).toFixed(2)}%
-          </p>
-          <p>
-            <b>Term remaining:</b> {loan.termMonthsRemaining} months
-          </p>
-          <p>
-            <b>Monthly repayment:</b> €{loan.monthlyPayment.toFixed(2)}
-          </p>
-          <p>
-            <b>Total interest on this finance:</b> €
-            {loan.totalInterestOnFinance.toFixed(2)}
-          </p>
-          {loan.financeType === "pcp" && (
-            <p>
-              <b>Balloon / GMFV at end:</b> €{loan.balloon.toFixed(2)}
-            </p>
-          )}
-        </div>
+          ▶
+        </span>
 
-        {/* US-08 - A before and after of loan details from a user’s decision
-        {/*Before vs After*/}
-        {previousLoan && (
-          <div
-            style={{
-              backgroundColor: "#ffffff",
-              borderRadius: "14px",
-              padding: "18px 20px",
-              boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
-              marginBottom: "16px",
-              maxWidth: "720px",
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
-            <h5 style={{ marginBottom: "10px" }}>Impact of your last decision</h5>
-            <table
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
+          <span>Impact of your last decision</span>
+          <span style={{ fontSize: "0.85rem", opacity: 0.6, fontWeight: 500 }}>
+            Click to expand
+          </span>
+        </div>
+      </div>
+
+      <span style={{ fontWeight: 600, opacity: 0.8 }}>
+        {renderChange(previousLoan.monthlyPayment, loan.monthlyPayment)}
+      </span>
+    </summary>
+
+    <div style={{ marginTop: "14px" }}>
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          fontSize: "0.9rem",
+        }}
+      >
+        <thead>
+          <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+            <th
               style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "0.9rem",
+                textAlign: "left",
+                paddingBottom: "6px",
+                fontWeight: 600,
               }}
             >
-              <thead>
-                <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      paddingBottom: "6px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Metric
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      paddingBottom: "6px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Before
-                  </th>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      paddingBottom: "6px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    After
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={{ padding: "4px 0" }}>Monthly repayment</td>
-                  <td style={{ padding: "4px 0" }}>
-                    €{previousLoan.monthlyPayment.toFixed(2)}
-                  </td>
-                  <td style={{ padding: "4px 0" }}>
-                    {renderChange(
-                      previousLoan.monthlyPayment,
-                      loan.monthlyPayment
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td style={{ padding: "4px 0" }}>Total interest</td>
-                  <td style={{ padding: "4px 0" }}>
-                    €{previousLoan.totalInterestOnFinance.toFixed(2)}
-                  </td>
-                  <td style={{ padding: "4px 0" }}>
-                    {renderChange(
-                      previousLoan.totalInterestOnFinance,
-                      loan.totalInterestOnFinance
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td style={{ padding: "4px 0" }}>Term remaining</td>
-                  <td style={{ padding: "4px 0" }}>
-                    {previousLoan.termMonthsRemaining} months
-                  </td>
-                  <td style={{ padding: "4px 0" }}>
-                    {renderMonthsChange(
-                      previousLoan.termMonthsRemaining,
-                      loan.termMonthsRemaining
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td style={{ padding: "4px 0" }}>Annual interest rate</td>
-                  <td style={{ padding: "4px 0" }}>
-                    {(previousLoan.annualRate * 100).toFixed(2)}%
-                  </td>
-                  <td style={{ padding: "4px 0" }}>
-                    {renderChange(
-                      previousLoan.annualRate * 100,
-                      loan.annualRate * 100,
-                      true
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
+              Metric
+            </th>
+            <th
+              style={{
+                textAlign: "left",
+                paddingBottom: "6px",
+                fontWeight: 600,
+              }}
+            >
+              Before
+            </th>
+            <th
+              style={{
+                textAlign: "left",
+                paddingBottom: "6px",
+                fontWeight: 600,
+              }}
+            >
+              After
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style={{ padding: "4px 0" }}>Monthly repayment</td>
+            <td style={{ padding: "4px 0" }}>
+              €{previousLoan.monthlyPayment.toFixed(2)}
+            </td>
+            <td style={{ padding: "4px 0" }}>
+              {renderChange(previousLoan.monthlyPayment, loan.monthlyPayment)}
+            </td>
+          </tr>
+          <tr>
+            <td style={{ padding: "4px 0" }}>Total interest</td>
+            <td style={{ padding: "4px 0" }}>
+              €{previousLoan.totalInterestOnFinance.toFixed(2)}
+            </td>
+            <td style={{ padding: "4px 0" }}>
+              {renderChange(
+                previousLoan.totalInterestOnFinance,
+                loan.totalInterestOnFinance
+              )}
+            </td>
+          </tr>
+          <tr>
+            <td style={{ padding: "4px 0" }}>Term remaining</td>
+            <td style={{ padding: "4px 0" }}>
+              {previousLoan.termMonthsRemaining} months
+            </td>
+            <td style={{ padding: "4px 0" }}>
+              {renderMonthsChange(
+                previousLoan.termMonthsRemaining,
+                loan.termMonthsRemaining
+              )}
+            </td>
+          </tr>
+          <tr>
+            <td style={{ padding: "4px 0" }}>Annual interest rate</td>
+            <td style={{ padding: "4px 0" }}>
+              {(previousLoan.annualRate * 100).toFixed(2)}%
+            </td>
+            <td style={{ padding: "4px 0" }}>
+              {renderChange(
+                previousLoan.annualRate * 100,
+                loan.annualRate * 100,
+                true
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <style jsx>{`
+      details summary::-webkit-details-marker {
+        display: none;
+      }
+      details summary:hover {
+        background: #f3f4f6;
+      }
+      details[open] .chevron {
+        transform: rotate(90deg);
+      }
+    `}</style>
+  </details>
+)}
+
+{/*US-18 - Graphical Insights}
+{/*Sparkline graph showing monthly payment trend over time*/}
+{scenario && (
+  <div
+    style={{
+      backgroundColor: "#ffffff",
+      borderRadius: "14px",
+      padding: "16px",
+      boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+      marginBottom: "16px",
+      maxWidth: "720px",
+      marginLeft: "auto",
+      marginRight: "auto",
+      position: "sticky",
+      top: "90px",
+    }}
+  >
+    <div style={{ fontWeight: 700, marginBottom: "8px" }}>
+      Monthly repayment trend
+    </div>
+
+    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      <Sparkline values={paymentHistory} />
+
+      <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
+        Start: €{paymentHistory[0].toFixed(2)}
+        <br />
+        Now: €{paymentHistory[paymentHistory.length - 1].toFixed(2)}
+      </div>
+    </div>
+  </div>
+)}
 
         {/*US-09 - A “simulation complete” details page with information on how the user ended up after they made their decisions
         {/* Scenario or completion message */}
@@ -2385,17 +2491,6 @@ if (outstanding <= 0) {
                     You have reached the end of the current set of scenarios. You can restart, or go back to the calculator to try different loan details.
                   </p>
                 )}
-
-              <button className="btn btn-secondary" onClick={handleRestart}>
-                Restart Simulation
-              </button>
-              <button
-                className="btn btn-outline-primary"
-                style={{ marginLeft: "10px" }}
-                onClick={onExit}
-              >
-                Back to Calculator
-              </button>
             </div>
 
             {showSummary && (
@@ -2433,21 +2528,56 @@ if (outstanding <= 0) {
     )}
 
 
-        <div
+              <button
+          onClick={handleRestart}
           style={{
-            marginTop: "16px",
-            display: "flex",
-            justifyContent: "center",
-            gap: "10px",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            border: "1px solid #d1d5db",
+            background: "#ffffff",
+            fontWeight: 700,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            transition: "transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 6px 14px rgba(0,0,0,0.10)";
+            e.currentTarget.style.background = "#f9fafb";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)";
+            e.currentTarget.style.background = "#ffffff";
           }}
         >
-          <button className="btn btn-secondary" onClick={handleRestart}>
-            Restart Simulation
-          </button>
-          <button className="btn btn-outline-primary" onClick={onExit}>
-            Back to Calculator
-          </button>
-        </div>
+          ↻ Restart simulation
+        </button>
+
+        <button
+          onClick={onExit}
+          style={{
+            padding: "12px 18px",
+            borderRadius: "12px",
+            border: "none",
+            color: "#ffffff",
+            fontWeight: 800,
+            cursor: "pointer",
+            background: "linear-gradient(90deg, #3b82f6 0%, #6366f1 50%, #22c55e 100%)",
+            boxShadow: "0 4px 14px rgba(59,130,246,0.35)",
+            transition: "transform 0.15s ease, box-shadow 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 6px 18px rgba(59,130,246,0.45)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 14px rgba(59,130,246,0.35)";
+          }}
+        >
+          ← Back to calculator
+        </button>
       </div>
     </div>
   );
@@ -2462,7 +2592,7 @@ export default function CarFinanceSimulatorPage() {
   //US-01 - Build a car loan calculator where the user can put in their own inputs
   //default values
 
-  const [financeType, setFinanceType] = useState<FinanceType>("loan");
+  const [financeType, setFinanceType] = useState<FinanceType>("loan");  
   const [cashPrice, setCashPrice] = useState(25000);
   const [deposit, setDeposit] = useState(5000);
   const [fees, setFees] = useState(0);
@@ -3047,9 +3177,34 @@ function applyPreset(preset: FinancePreset) {
                 )}
 
                 {/*Begin Simulator button*/}
-                <button className="btn btn-primary mt-24" onClick={handleBeginSimulator}>
-                  Begin Simulator
-                </button>
+                              <button
+                onClick={handleBeginSimulator}
+                style={{
+                  marginTop: "24px",
+                  padding: "14px 22px",
+                  borderRadius: "12px",
+                  border: "none",
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  color: "#ffffff",
+                  background: "linear-gradient(90deg, #3b82f6 0%, #6366f1 50%, #22c55e 100%)",
+                  boxShadow: "0 4px 14px rgba(59,130,246,0.35)",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 6px 18px rgba(59,130,246,0.45)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 14px rgba(59,130,246,0.35)";
+                }}
+              >
+                🚀 Begin Simulation
+              </button>
                 <p className="small mt-2" style={{ opacity: 0.8 }}>
                   Start the simulator to see how real-life scenarios affect your repayments.
                 </p>

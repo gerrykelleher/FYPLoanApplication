@@ -7,6 +7,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import Navbar from "./components/navbar";
 
+//US-04 - A landing page where the user can select the car loan or mortgage simulator
 export default function Home() {
 
   //Page layout and typography
@@ -61,13 +62,14 @@ export default function Home() {
         </div>
 
         <h1 style={{ fontSize: "32px", color: "#111" }}>
-          Financial Literacy Classroom Tools
+          Financial Literacy Classroom Tool
         </h1>
 
         <p style={{ marginTop: "10px", color: "#444", fontSize: "17px" }}>
           Learn how borrowing and repayments work through interactive simulators.
         </p>
 
+        {/*US-04 - A landing page where the user can select the car loan or mortgage simulator
         {/* Navigation Buttons */}
         <div style={{ marginTop: "50px" }}>
           <Link href="/simulate/car" style={buttonStyle} className="navBtn">
@@ -82,7 +84,7 @@ export default function Home() {
         {/* Learn more link */}
         <div style={{ marginTop: "30px" }}>
           <Link
-            href="/learn"
+            href="/learn-more"
             style={{
               display: "inline-block",
               backgroundColor: "#e5e7eb",
@@ -102,18 +104,6 @@ export default function Home() {
         <div style={{ marginTop: "60px", fontSize: "15px", color: "#555" }}>
           <p>
             Educational simulator built for financial literacy classes in Ireland.
-          </p>
-          <p>
-            <Link
-              href="/supabase-test"
-              style={{
-                color: "#0070f3",
-                textDecoration: "underline",
-                fontWeight: "bold",
-              }}
-            >
-              Test Supabase Connectivity
-            </Link>
           </p>
         </div>
 
