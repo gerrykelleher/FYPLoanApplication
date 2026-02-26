@@ -19,7 +19,7 @@ type SavedSimulationRow = {
   user_id: string;
   created_at: string;
   name: string | null;
-    car_name: string | null; //optional
+  car_name: string | null; //optional
 
   finance_type: "loan" | "pcp";
   cash_price: number;
@@ -45,8 +45,8 @@ function formatEuro(n: number) {
 
 //US-17 - Side-by-side comparison view
 export default function CompareClient() {
-  const searchParams = useSearchParams();   //to read ?ids= from URL
-  const idsParam = searchParams.get("ids") ?? "";   //comma separated list of simulation IDs to compare
+  const searchParams = useSearchParams(); //to read ?ids= from URL
+  const idsParam = searchParams.get("ids") ?? ""; //comma separated list of simulation IDs to compare
 
   //Read and clean IDs from URL, limit to MAX_COMPARE
   const ids = useMemo(() => {
@@ -75,7 +75,7 @@ export default function CompareClient() {
       setAuthMessage(null);
 
       /**
-        Auth gate: dashboard already requires login, but we keep this page safe if a user opens /compare directly. Supabase RLS should still enforce row access server-side.
+       Auth gate: dashboard already requires login, but we keep this page safe if a user opens /compare directly. Supabase RLS should still enforce row access server-side.
        */
       const {
         data: { user },
@@ -128,7 +128,7 @@ export default function CompareClient() {
 
       const fetched = (data ?? []) as SavedSimulationRow[];
 
-      // Re-order results to match selection order
+      //Reorder results to match selection order
       const byId = new Map(fetched.map((r) => [r.id, r]));
       const ordered = ids.map((id) => byId.get(id)).filter(Boolean) as SavedSimulationRow[];
 
@@ -168,6 +168,7 @@ export default function CompareClient() {
     ];
   }, []);
 
+  //Shows if values in a row are different across simulations, used for highlighting
   function isDifferent(values: string[]) {
     return new Set(values).size > 1;
   }
@@ -183,18 +184,23 @@ export default function CompareClient() {
         <Link
           href="/dashboard/simulations"
           style={{
-            display: "inline-block",
-            padding: "10px 14px",
-            borderRadius: "10px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "10px 16px",
+            borderRadius: "999px",
             border: "1px solid #d1d5db",
             background: "white",
             color: "#111827",
             textDecoration: "none",
             fontWeight: 700,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            transition: "all 0.2s ease",
             height: "fit-content",
           }}
+          className="backBtn"
         >
-          Back to dashboard
+          ← Back to dashboard
         </Link>
       </div>
 
@@ -256,21 +262,49 @@ export default function CompareClient() {
                 boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
               }}
             >
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  minWidth: 800,
+                }}
+              >
                 <thead>
                   <tr>
-                    <th style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid #e5e7eb" }}>Field</th>
+                    <th
+                      style={{
+                        textAlign: "left",
+                        padding: "12px",
+                        borderBottom: "1px solid #e5e7eb",
+                        position: "sticky",
+                        top: 0,
+                        left: 0,
+                        background: "#ffffff",
+                        zIndex: 3,
+                      }}
+                    >
+                      Field
+                    </th>
                     {sims.map((s) => (
                       <th
                         key={s.id}
-                        style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid #e5e7eb" }}
+                        style={{
+                          textAlign: "left",
+                          padding: "12px",
+                          borderBottom: "1px solid #e5e7eb",
+                          position: "sticky",
+                          top: 0,
+                          background: "#ffffff",
+                          zIndex: 2,
+                        }}
                       >
                         <div style={{ fontWeight: 800 }}>{s.name ?? fallbackName(s)}</div>
+
                         {s.car_name && (
-                    <div style={{ fontSize: "0.85rem", opacity: 0.85, marginTop: "2px" }}>
-                        <b>Car:</b> {s.car_name}
-                    </div>
-                    )}
+                          <div style={{ fontSize: "0.85rem", opacity: 0.85, marginTop: "2px" }}>
+                            <b>Car:</b> {s.car_name}
+                          </div>
+                        )}
 
                         <div style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "2px" }}>
                           {new Date(s.created_at).toLocaleString()} • {s.finance_type.toUpperCase()}
@@ -281,21 +315,40 @@ export default function CompareClient() {
                 </thead>
 
                 <tbody>
-                  {compareRows.map((row) => {
+                  {compareRows.map((row, rowIdx) => {
                     const values = sims.map((s) => row.get(s));
                     const different = isDifferent(values);
 
+                    const zebra = rowIdx % 2 === 0 ? "#ffffff" : "#fafafa";
+                    const bg = different ? "#f0f9ff" : zebra;
+
                     return (
-                      <tr key={row.label} style={{ background: different ? "#f9fafb" : "white" }}>
-                        <td style={{ padding: "12px", borderBottom: "1px solid #f3f4f6", fontWeight: 700 }}>
+                      <tr key={row.label} style={{ background: bg }}>
+                        <td
+                          style={{
+                            padding: "12px",
+                            borderBottom: "1px solid #f3f4f6",
+                            fontWeight: 700,
+                            position: "sticky",
+                            left: 0,
+                            background: "inherit",
+                            zIndex: 1,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {row.label}
-                          {different && (
-                            <span style={{ marginLeft: 8, fontSize: "0.8rem", opacity: 0.7 }}>(diff)</span>
-                          )}
                         </td>
 
                         {values.map((v, idx) => (
-                          <td key={idx} style={{ padding: "12px", borderBottom: "1px solid #f3f4f6" }}>
+                          <td
+                            key={idx}
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #f3f4f6",
+                              textAlign: row.label === "Finance type" ? "left" : "right",
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
                             {v}
                           </td>
                         ))}
@@ -308,6 +361,13 @@ export default function CompareClient() {
           )}
         </>
       )}
+
+      <style jsx>{`
+        .backBtn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+        }
+      `}</style>
     </>
   );
 }

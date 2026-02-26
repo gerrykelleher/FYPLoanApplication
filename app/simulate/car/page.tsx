@@ -1630,59 +1630,81 @@ const termChange =
 //Handles saving the simulation for signed-in users only
 //async functio is used to allow for awaiting the Supabase auth and database calls, ensuring proper flow and error handling
 async function handleSaveSimulation() {
-  //Prevent duplicate saves
+  // Prevent duplicate saves
   if (isSaving || isSaved) return;
 
   setIsSaving(true);
   setSaveError(null);
 
-  //US-15 - User can save, rename, organise, delete completed simulations
-  //Retrieve the currently authenticated user from Supabase
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+  // Prompt user to name the simulation
+const defaultName = carName
+  ? `${carName} - ${new Date().toLocaleDateString()}`
+  : `Simulation - ${new Date().toLocaleDateString()}`;
 
-    //If no user is signed in, block saving
-    if (authError || !user) {
-      setIsSaving(false);
-      setSaveError("Please sign in to save your simulation.");
-      return;
-    }
+const enteredName = window.prompt(
+  "Enter a name for this simulation:",
+  defaultName
+);
 
-    //US-15 - User can save, rename, organise, delete completed simulations
-    //Insert the simulation into the saved_simulations table
-    const { error } = await supabase.from("saved_simulations").insert({
-      user_id: user.id,
-      car_name: carName || null, 
-      finance_type: finalLoan.financeType,
-      cash_price: finalLoan.principal,
-      deposit: 0,
-      apr: finalLoan.annualRate * 100,
-      term_months: finalLoan.termMonthsRemaining,
-      balloon: finalLoan.financeType === "pcp" ? finalLoan.balloon : null,
-
-      final_monthly_payment: finalLoan.monthlyPayment,
-      total_interest: finalLoan.totalInterestOnFinance,
-      months_remaining: finalLoan.termMonthsRemaining,
-
-      decisions: decisions,
-      payment_history: paymentHistory,
-
-    });
-
-    //Handle database insert failure
-    if (error) {
-      setSaveError("Failed to save simulation. Please try again.");
-      setIsSaving(false);
-      return;
-    }
-
-    //US-15 - User can save, rename, organise, delete completed simulations
-    //Mark simulation as successfully saved
+  // If user presses cancel
+  if (enteredName === null) {
     setIsSaving(false);
-    setIsSaved(true);
+    return;
   }
+
+  const trimmedName = enteredName.trim();
+
+  if (!trimmedName) {
+    setSaveError("Simulation name cannot be empty.");
+    setIsSaving(false);
+    return;
+  }
+
+  // Retrieve currently authenticated user
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  // If no user signed in
+  if (authError || !user) {
+    setIsSaving(false);
+    setSaveError("Please sign in to save your simulation.");
+    return;
+  }
+
+  // Insert simulation into database
+  const { error } = await supabase.from("saved_simulations").insert({
+    user_id: user.id,
+    name: trimmedName, // <-- added name field
+    car_name: carName || null,
+    finance_type: finalLoan.financeType,
+    cash_price: finalLoan.principal,
+    deposit: 0,
+    apr: finalLoan.annualRate * 100,
+    term_months: finalLoan.termMonthsRemaining,
+    balloon:
+      finalLoan.financeType === "pcp" ? finalLoan.balloon : null,
+
+    final_monthly_payment: finalLoan.monthlyPayment,
+    total_interest: finalLoan.totalInterestOnFinance,
+    months_remaining: finalLoan.termMonthsRemaining,
+
+    decisions: decisions,
+    payment_history: paymentHistory,
+  });
+
+  // Handle insert failure
+  if (error) {
+    setSaveError("Failed to save simulation. Please try again.");
+    setIsSaving(false);
+    return;
+  }
+
+  // Mark as saved
+  setIsSaving(false);
+  setIsSaved(true);
+}
 
   const summaryCardStyle: React.CSSProperties = {
     backgroundColor: "#f9fafb",
@@ -1750,27 +1772,54 @@ async function handleSaveSimulation() {
           </p>
         </div>
 
-        {/* Success banner shown after save */}
-        {isSaved && (
-          <div
-            style={{
-              backgroundColor: "#dcfce7",
-              border: "1px solid #22c55e",
-              color: "#166534",
-              padding: "10px 14px",
-              borderRadius: "8px",
-              marginBottom: "16px",
-              fontWeight: 600,
-            }}
-          >
-            ✅ Simulation saved successfully.
-            <div style={{ marginTop: "6px" }}>
-              <Link href="/dashboard/simulations" style={{ textDecoration: "underline" }}>
-                View dashboard
-              </Link>
-            </div>
-          </div>
-        )}
+      {/* Success banner shown after save */}
+{isSaved && (
+  <div
+    style={{
+      backgroundColor: "#dcfce7",
+      border: "1px solid #22c55e",
+      color: "#166534",
+      padding: "16px 18px",
+      borderRadius: "14px",
+      marginBottom: "18px",
+      fontWeight: 600,
+      boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+    }}
+  >
+    <div style={{ fontSize: "1rem", fontWeight: 700 }}>
+      ✅ Simulation saved successfully.
+    </div>
+
+    <div style={{ marginTop: "10px" }}>
+      <Link
+        href="/dashboard/simulations"
+        style={{
+          display: "inline-block",
+          padding: "8px 14px",
+          borderRadius: "10px",
+          backgroundColor: "#166534",
+          color: "#ffffff",
+          fontWeight: 700,
+          textDecoration: "none",
+          fontSize: "0.9rem",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+          transition: "all 0.2s ease",
+        }}
+        className="dashboardBtn"
+      >
+        📊 View Dashboard →
+      </Link>
+    </div>
+
+    <style jsx>{`
+      .dashboardBtn:hover {
+        background-color: #14532d;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+      }
+    `}</style>
+  </div>
+)}
 
         {/* Error banner if save fails */}
         {saveError && (
