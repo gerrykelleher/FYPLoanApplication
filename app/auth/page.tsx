@@ -4,21 +4,21 @@
 //https://supabase.com/docs/reference/javascript/auth-signinwithpassword
 //https://www.scribd.com/document/883924715/Design-a-Responsive-Sliding-Login-Registration-Form-Using-HTML-CSS-JavaScript-GeeksforGeeks
 
-
 "use client"; //this is a client component
 
 import { useState } from "react";
 import type { FormEvent } from "react";
 import "./auth.css";
 import Navbar from "../components/navbar";
-import { supabase } from "@/lib/supabaseClient";  //authentication client
+import { supabase } from "@/lib/supabaseClient"; //authentication client
 
 //US-11 - Account creation / log in
 export default function AuthPage() {
-  const [mode, setMode] = useState<"login" | "register">("login");  //mode toggle (login/register)
+  const [mode, setMode] = useState<"login" | "register">("login"); //mode toggle (login/register)
+  const [username, setUsername] = useState(""); //username for registration
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);  //feedback message
+  const [msg, setMsg] = useState<string | null>(null); //feedback message
   const [loading, setLoading] = useState(false);
 
   //handles form submission for both login and registration
@@ -30,6 +30,7 @@ export default function AuthPage() {
     //whitespace trimming
     const cleanEmail = email.trim();
     const cleanPassword = password.trim();
+    const cleanUsername = username.trim();
 
     try {
       if (mode === "register") {
@@ -37,12 +38,15 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email: cleanEmail,
           password: cleanPassword,
+          options: {
+            data: {
+              username: cleanUsername || null, //store username in user_metadata
+            },
+          },
         });
         //set feedback message (error or success)
         setMsg(
-          error
-            ? error.message
-            : "Registered! Check your email to confirm (if enabled)."
+          error ? error.message : "Registered! Check your email to confirm (if enabled)."
         );
       } else {
         //login existing user
@@ -53,7 +57,7 @@ export default function AuthPage() {
         setMsg(error ? error.message : "Logged in!");
       }
     } finally {
-      //stop loading when request is finished 
+      //stop loading when request is finished
       setLoading(false);
     }
   }
@@ -86,9 +90,7 @@ export default function AuthPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete={
-                  mode === "login" ? "current-password" : "new-password"
-                }
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
               />
 
               {/* Forgot password link */}
@@ -114,6 +116,16 @@ export default function AuthPage() {
             <form onSubmit={handleSubmit}>
               <h1>Create Account</h1>
               <span>Register with email and password</span>
+
+              {/* Username field */}
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                autoComplete="username"
+              />
 
               <input
                 type="email"
@@ -153,6 +165,7 @@ export default function AuthPage() {
                   onClick={() => {
                     setMsg(null);
                     setMode("login");
+                    setUsername(""); //optional: clear username when switching to login
                   }}
                 >
                   Sign In

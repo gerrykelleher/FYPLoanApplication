@@ -51,7 +51,7 @@ const financePresets: FinancePreset[] = [
   //Student / budget (Loan)
   {
     id: "ford-fiesta-used",
-    label: "Used Ford Fiesta (Loan)",
+    label: "Used Ford Fiesta",
     financeType: "loan",
     cashPrice: 12000,
     deposit: 1500,
@@ -61,7 +61,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "toyota-yaris-used",
-    label: "Used Toyota Yaris (Loan)",
+    label: "Used Toyota Yaris",
     financeType: "loan",
     cashPrice: 13500,
     deposit: 2000,
@@ -71,7 +71,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "toyota-corolla-used",
-    label: "Used Toyota Corolla (Loan)",
+    label: "Used Toyota Corolla",
     financeType: "loan",
     cashPrice: 16500,
     deposit: 2000,
@@ -81,7 +81,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "vw-golf-used",
-    label: "Used VW Golf (Loan)",
+    label: "Used VW Golf",
     financeType: "loan",
     cashPrice: 19000,
     deposit: 3000,
@@ -91,7 +91,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "hyundai-i30-used",
-    label: "Used Hyundai i30 (Loan)",
+    label: "Used Hyundai i30",
     financeType: "loan",
     cashPrice: 17500,
     deposit: 2500,
@@ -103,7 +103,7 @@ const financePresets: FinancePreset[] = [
   //Mid range / popular (PCP)
   {
     id: "audi-a3-pcp",
-    label: "Audi A3 (PCP)",
+    label: "Audi A3",
     financeType: "pcp",
     cashPrice: 36000,
     deposit: 4000,
@@ -114,7 +114,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "vw-golf-new-pcp",
-    label: "New VW Golf (PCP)",
+    label: "New VW Golf",
     financeType: "pcp",
     cashPrice: 34000,
     deposit: 3500,
@@ -125,7 +125,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "mercedes-a-class-pcp",
-    label: "Mercedes A-Class (PCP)",
+    label: "Mercedes A-Class",
     financeType: "pcp",
     cashPrice: 42000,
     deposit: 5000,
@@ -136,7 +136,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "bmw-3series-pcp",
-    label: "BMW 3 Series (PCP)",
+    label: "BMW 3 Series",
     financeType: "pcp",
     cashPrice: 48000,
     deposit: 6000,
@@ -149,7 +149,7 @@ const financePresets: FinancePreset[] = [
   //Family / practical (PCP)
   {
     id: "skoda-octavia-pcp",
-    label: "Skoda Octavia (PCP)",
+    label: "Skoda Octavia",
     financeType: "pcp",
     cashPrice: 38000,
     deposit: 4000,
@@ -160,7 +160,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "toyota-rav4-pcp",
-    label: "Toyota RAV4 Hybrid (PCP)",
+    label: "Toyota RAV4 Hybrid",
     financeType: "pcp",
     cashPrice: 52000,
     deposit: 6000,
@@ -173,7 +173,7 @@ const financePresets: FinancePreset[] = [
   //Electric (PCP)
   {
     id: "tesla-model-3-pcp",
-    label: "Tesla Model 3 (PCP)",
+    label: "Tesla Model 3",
     financeType: "pcp",
     cashPrice: 42000,
     deposit: 5000,
@@ -184,7 +184,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "hyundai-kona-ev-pcp",
-    label: "Hyundai Kona Electric (PCP)",
+    label: "Hyundai Kona Electric",
     financeType: "pcp",
     cashPrice: 39500,
     deposit: 4500,
@@ -195,7 +195,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "kia-ev6-pcp",
-    label: "Kia EV6 (PCP)",
+    label: "Kia EV6",
     financeType: "pcp",
     cashPrice: 52000,
     deposit: 6000,
@@ -208,7 +208,7 @@ const financePresets: FinancePreset[] = [
   //High-end / aspirational (PCP)
   {
     id: "bmw-4series-pcp",
-    label: "BMW 4 Series Coupe (PCP)",
+    label: "BMW 4 Series Coupe",
     financeType: "pcp",
     cashPrice: 62000,
     deposit: 7000,
@@ -219,7 +219,7 @@ const financePresets: FinancePreset[] = [
   },
   {
     id: "audi-a6-pcp",
-    label: "Audi A6 (PCP)",
+    label: "Audi A6",
     financeType: "pcp",
     cashPrice: 65000,
     deposit: 8000,
@@ -2813,11 +2813,12 @@ function applyPreset(preset: FinancePreset) {
         gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
         gap: "8px",
       }}
-    >
+    > 
       <div><b>Cash price:</b> €{cashPrice.toLocaleString()}</div>
       <div><b>Deposit:</b> €{deposit.toLocaleString()}</div>
       <div><b>APR:</b> {aprPct}%</div>
       <div><b>Term:</b> {termMonths} months</div>
+      <div><b>Finance type:</b> {financeType === "loan" ? "Loan" : "PCP"}</div>
 
       {financeType === "pcp" && (
         <div><b>Balloon / GMFV:</b> €{balloon.toLocaleString()}</div>

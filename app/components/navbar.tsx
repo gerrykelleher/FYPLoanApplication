@@ -6,22 +6,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import type { User } from "@supabase/supabase-js";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // Get current session on load
     supabase.auth.getSession().then(({ data }) => {
-      setUserEmail(data.session?.user.email ?? null);
+      setUser(data.session?.user ?? null);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserEmail(session?.user.email ?? null);
+      setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
@@ -40,6 +41,9 @@ export default function Navbar() {
   const activeStyle = { backgroundColor: "#0059c1" };
   const defaultStyle = { backgroundColor: "#333" };
 
+  const displayName =
+    user?.user_metadata?.username || user?.email || null;
+
   return (
     <div
       style={{
@@ -53,6 +57,47 @@ export default function Navbar() {
         zIndex: 1000,
       }}
     >
+       {/* LEFT: BRAND */}
+ <Link
+  href="/"
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    textDecoration: "none",
+  }}
+>
+  <div
+    style={{
+      width: "36px",
+      height: "36px",
+      borderRadius: "10px",
+      background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 800,
+      color: "white",
+      fontSize: "15px",
+      fontFamily: "Arial, sans-serif",
+      boxShadow: "0 6px 14px rgba(59,130,246,0.25)",
+    }}
+  >
+    SB
+  </div>
+
+  <span
+    style={{
+      fontWeight: 800,
+      fontSize: "19px",
+      letterSpacing: "-0.3px",
+      fontFamily: "Arial, sans-serif",
+      color: "white",
+    }}
+  >
+    SmartBorrow
+  </span>
+</Link>
       {/* CENTER NAV LINKS */}
       <div style={{ display: "flex", margin: "0 auto" }}>
         {[
@@ -75,7 +120,7 @@ export default function Navbar() {
 
       {/* RIGHT ACCOUNT AREA */}
       <div style={{ marginRight: "20px" }}>
-        {userEmail ? (
+        {user ? (
           <>
             <span
               style={{
@@ -85,7 +130,7 @@ export default function Navbar() {
                 marginRight: "10px",
               }}
             >
-              👤 {userEmail}
+              👤 {displayName}
             </span>
 
             <span

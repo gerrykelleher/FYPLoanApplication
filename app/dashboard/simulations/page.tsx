@@ -569,7 +569,7 @@ export default function DashboardPage() {
                         )}
                       </div>
 
-                      {/* Expanded details with right-side graph */}
+                      {/* Expanded details with right side graph */}
                       {isExpanded && !isEditing && (
                         <div
                           style={{
@@ -582,7 +582,7 @@ export default function DashboardPage() {
                             alignItems: "start",
                           }}
                         >
-                          {/* LEFT: metrics + decisions */}
+                          {/*metrics and decisions */}
                           <div
                             style={{
                               display: "grid",
@@ -590,7 +590,9 @@ export default function DashboardPage() {
                               gap: "10px",
                               fontSize: "0.95rem",
                             }}
-                          >
+                            ><div>
+                            <b>Finance type:</b> {r.finance_type.toUpperCase()}
+                            </div>
                             <div>
                               <b>Cash price:</b> €{Number(r.cash_price).toFixed(2)}
                             </div>
@@ -627,7 +629,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          {/* RIGHT: graph card */}
+                          {/*graph card */}
                           <div
                             style={{
                               border: "1px solid #e5e7eb",
